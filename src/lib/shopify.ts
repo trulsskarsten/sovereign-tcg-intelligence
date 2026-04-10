@@ -1,19 +1,22 @@
 import { isDryRun, generateIdempotencyKey, validatePriceChange } from "./safety";
-
-let cachedToken: string | null = null;
-let tokenExpiry: number | null = null;
-
-/**
- * Ensures a valid Admin API Access Token is available.
- * Supports both permanent tokens and Client Credentials Exchange.
- */
-async function getAccessToken(): Promise<string> {
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+let cachedToken: string | null = null;
+let tokenExpiry: number | null = null;
+
+/**
+ * Ensures a valid Admin API Access Token is available.
+ */
+async function getAccessToken(): Promise<string> {
+  const shopDomain = process.env.SHOPIFY_SHOP_NAME;
+  if (!shopDomain) throw new Error("Missing SHOPIFY_SHOP_NAME env var");
+  return getShopifyAccessToken(shopDomain);
+}
 
 /**
  * Universal Shopify Auth Engine

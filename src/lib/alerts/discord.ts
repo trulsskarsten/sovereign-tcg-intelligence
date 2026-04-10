@@ -5,6 +5,8 @@
  * using standard webhooks. No 3rd party costs.
  */
 
+export type AlertSeverity = 'info' | 'success' | 'warning' | 'error' | 'critical';
+
 export interface DiscordEmbed {
   title: string;
   description: string;
@@ -15,9 +17,13 @@ export interface DiscordEmbed {
   timestamp?: string;
 }
 
-const COLORS = {
-  success: 0x108043, // Shopify Green
-}
+const COLORS: Record<AlertSeverity, number> = {
+  info: 0x005bd3,
+  success: 0x108043,
+  warning: 0xf49342,
+  error: 0xc02d2d,
+  critical: 0x000000
+};
 
 const AVATARS = {
   STATUS: "https://img.icons8.com/color/96/bot.png",
@@ -41,14 +47,6 @@ export async function sendDiscordAlert(
   const webhookUrl = isCritical ? SECURITY_WEBHOOK : STATUS_WEBHOOK;
   
   if (!webhookUrl) return;
-
-  const COLORS = {
-    info: 0x005bd3,
-    success: 0x108043,
-    warning: 0xf49342,
-    error: 0xc02d2d,
-    critical: 0x000000
-  };
 
   const embed: DiscordEmbed = {
     title: payload.title,
@@ -99,7 +97,6 @@ export async function sendBulkUpdateReport(data: {
  * Pre-formatted: Price Safety Alert
  */
 export async function notifyPriceSafetyTriggered(
-  webhookUrl: string, 
   productName: string, 
   currentPrice: number, 
   newPrice: number,
@@ -108,10 +105,10 @@ export async function notifyPriceSafetyTriggered(
   const diff = newPrice - currentPrice;
   const isIncrease = diff > 0;
 
-  await sendDiscordAlert(webhookUrl, {
+  await sendDiscordAlert({
     title: `⚠️ Sikkerhets-sperre utløst: ${productName}`,
-    description: `En prisendring ble blokkert fordi den oversteg trygghets-grensene for dette produktet.`,
-    color: COLORS.warning,
+    message: `En prisendring ble blokkert fordi den oversteg trygghets-grensene for dette produktet.`,
+    severity: 'warning',
     fields: [
       { name: "Nåværende Pris", value: `${currentPrice} kr`, inline: true },
       { name: "Foreslått Pris", value: `${newPrice} kr`, inline: true },
@@ -124,11 +121,11 @@ export async function notifyPriceSafetyTriggered(
 /**
  * Pre-formatted: Panic Lock / Circuit Breaker
  */
-export async function notifyPanicLockActivated(webhookUrl: string, storeName: string) {
-  await sendDiscordAlert(webhookUrl, {
+export async function notifyPanicLockActivated(storeName: string) {
+  await sendDiscordAlert({
     title: `🚨 AUTOMATISERING PAUSET (CIRCUIT BREAKER)`,
-    description: `Systemet har detektert mer enn 10 sikkerhets-sperrer på under én time for **${storeName}**. All autopilot er midlertidig deaktivert for å beskytte butikken din.`,
-    color: COLORS.danger,
+    message: `Systemet har detektert kritiske sikkerhetsutfordringer for **${storeName}**. All autopilot er midlertidig deaktivert for å beskytte butikken din.`,
+    severity: 'critical',
     fields: [
       { name: "Status", value: "Autopilot: AV" },
       { name: "Handling", value: "Vennligst sjekk Staging-området i instrumentbordet." }

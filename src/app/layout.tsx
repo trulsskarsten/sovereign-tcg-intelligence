@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+import { UIProvider } from "@/components/Providers";
+
 const font = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Skarsten TCG Ops",
-  description: "Operations dashboard for Pokemon TCG",
+  title: "Sovereign TCG Intelligence",
+  description: "Enterprise-grade operations for Pokemon TCG merchants",
 };
 
 export default function RootLayout({
@@ -17,15 +19,16 @@ export default function RootLayout({
   return (
     <html lang="no" className="h-full antialiased" suppressHydrationWarning>
       <body 
-        className={`${font.className} min-h-full bg-[#f6f6f7] text-[#202223] flex flex-col`}
+        className={`${font.className} min-h-full bg-[#fdfdfd] text-[#1a1a1a] flex flex-col`}
         suppressHydrationWarning
       >
-        <div className="flex-1 flex flex-col relative overflow-hidden">
-          {/* subtle pattern or background can go here */}
-          <main className="relative z-10 flex-1 flex flex-col">
-            {children}
-          </main>
-        </div>
+        <UIProvider>
+          <div className="flex-1 flex flex-col relative overflow-hidden">
+            <main className="relative z-10 flex-1 flex flex-col">
+              {children}
+            </main>
+          </div>
+        </UIProvider>
       </body>
     </html>
   );

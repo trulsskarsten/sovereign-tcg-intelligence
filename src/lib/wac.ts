@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "./supabase";
-import { updateInventoryCost, updateInventoryLevel } from "./shopify";
+import { updateInventoryCost } from "./shopify";
 
 export interface PurchaseInput {
   shopifyVariantId: string;

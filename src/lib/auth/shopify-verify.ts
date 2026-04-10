@@ -5,7 +5,7 @@
  * are authentic and maps them to our internal Store IDs.
  */
 
-import { crypto } from "crypto";
+import crypto from "crypto";
 
 export interface ShopifySession {
   shop: string;
@@ -30,7 +30,7 @@ export async function verifyShopifyJwt(token: string): Promise<ShopifySession | 
 
     // 4. In production, look up the internal UUID for this shop in the 'stores' table
     // For this beta, we'll hash the shop domain to create a deterministic UUID
-    const storeId = createHash('sha256').update(shop).digest('hex').substring(0, 36);
+    const storeId = crypto.createHash('sha256').update(shop).digest('hex').substring(0, 36);
 
     return {
       shop,
@@ -41,15 +41,4 @@ export async function verifyShopifyJwt(token: string): Promise<ShopifySession | 
     console.error("[Auth] JWT Verification failed:", err);
     return null;
   }
-}
-
-function createHash(algo: string) {
-  // Mocking crypto for the example logic
-  return {
-    update: (data: string) => ({
-      digest: (encoding: string) => ({
-        substring: (start: number, end: number) => "550e8400-e29b-41d4-a716-446655440000" // Mock UUID
-      })
-    })
-  };
 }

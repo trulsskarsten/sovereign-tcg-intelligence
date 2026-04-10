@@ -27,7 +27,14 @@
   }
 
   .premium-card {
-    @apply bg-white rounded-3xl border border-[#f1f2f3] shadow-[0_2px_12px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)];
+    background-color: white;
+    border-radius: 1.5rem; /* 24px */
+    border: 1px solid #f1f2f3;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+    transition: all 0.2s ease-in-out;
+  }
+  .premium-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.04);
   }
 
   .polaris-card {
@@ -35,7 +42,7 @@
   }
   
   .polaris-header {
-    @apply glass-panel px-6 py-4 flex items-center justify-between sticky top-0 z-50;
+    @apply backdrop-blur-md bg-white/70 border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] px-6 py-4 flex items-center justify-between sticky top-0 z-50;
   }
 
   .polaris-nav-item {

@@ -9,7 +9,9 @@ import {
   MessageSquare, 
   Zap,
   Save,
-  AlertOctagon
+  AlertOctagon,
+  Info,
+  ShieldAlert
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -246,35 +248,25 @@ export default function AutomationSettings() {
                         <p className="text-xs text-[#6d7175] leading-relaxed mb-4">
                           Lim inn adressen du kopierte nedenfor og trykk på verifiser.
                         </p>
-                            <div className="space-y-4 pt-4">
-                              <div className="grid gap-2">
-                                <label className="text-[12px] font-bold text-[#202223] uppercase tracking-wider">Status-kanal URL (Prisendringer)</label>
-                                <div className="flex space-x-2">
-                                  <input 
-                                    className="flex-1 polaris-input bg-[#f6f6f7]" 
-                                    placeholder="https://discord.com/api/webhooks/..."
-                                    value={discordUrl}
-                                    onChange={(e) => setDiscordUrl(e.target.value)}
-                                  />
-                                  <button className="polaris-button-secondary py-2">Test</button>
-                                </div>
-                              </div>
-                              <div className="grid gap-2">
-                                <label className="text-[12px] font-bold text-[#202223] uppercase tracking-wider">Sikkerhets-kanal URL (Kritiske varsler)</label>
-                                <div className="flex space-x-2">
-                                  <input 
-                                    className="flex-1 polaris-input bg-[#f6f6f7]" 
-                                    placeholder="https://discord.com/api/webhooks/..."
-                                  />
-                                  <button className="polaris-button-secondary py-2">Test</button>
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-[#6d7175] flex items-center bg-[#f1f2f3] p-2 rounded">
-                                <Info size={14} className="mr-2" />
-                                Vi anbefaler å skille prisoppdateringer fra kritiske systemvarsler for bedre oversikt.
-                              </p>
+                        <div className="space-y-4 pt-4">
+                          <div className="grid gap-2">
+                            <label className="text-[12px] font-bold text-[#202223] uppercase tracking-wider">Status-kanal URL (Prisendringer)</label>
+                            <div className="flex space-x-2">
+                              <input 
+                                className="flex-1 polaris-input bg-[#f6f6f7]" 
+                                placeholder="https://discord.com/api/webhooks/..."
+                                value={settings.discordWebhook}
+                                onChange={(e) => setSettings({...settings, discordWebhook: e.target.value})}
+                              />
+                              <button className="polaris-btn-secondary py-2">Test</button>
                             </div>
-                        <button onClick={() => setSetupStep(1)} className="polaris-btn-secondary text-[10px]">Start på nytt</button>
+                          </div>
+                          <p className="text-[11px] text-[#6d7175] flex items-center bg-[#f1f2f3] p-2 rounded">
+                            <Info size={14} className="mr-2" />
+                            Status-kanalen vil motta daglige oppdateringer om Auto-Pilot operasjoner.
+                          </p>
+                        </div>
+                        <button onClick={() => setSetupStep(1)} className="mt-4 polaris-btn-secondary text-[10px]">Start på nytt</button>
                       </div>
                     )}
                   </div>
@@ -284,67 +276,56 @@ export default function AutomationSettings() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="pt-6 border-t border-[#f1f2f3] flex items-center justify-between">
-                <div>
-                    <p className="text-sm font-medium text-[#1a1a1a]">Nødstopp (Panic Lock)</p>
-                    <p className="text-xs text-[#6d7175]">Pauser alle prisoppdateringer hvis mer enn 5% av lageret opplever dristige fall.</p>
-                  </div>
-                  <div className="flex items-center h-6">
-                    <input type="checkbox" className="w-10 h-5 bg-[#005bd3] rounded-full appearance-none cursor-pointer relative after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-3 after:h-3 after:rounded-full after:transition-all checked:after:translate-x-5" defaultChecked />
-                  </div>
+          {/* Section 4: Sovereign Auto-Pilot */}
+          <div className="premium-card p-10 bg-gradient-to-br from-white to-[#f9fafb]">
+             <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center space-x-4">
+                   <div className="p-3 bg-blue-50 text-[#005bd3] rounded-2xl">
+                      <Zap size={24} />
+                   </div>
+                   <div>
+                      <h3 className="text-xl font-black text-[#1a1a1a] tracking-tight">Sovereign Auto-Pilot</h3>
+                      <p className="text-xs font-bold text-[#6d7175] uppercase tracking-widest">Autonom Operasjonalisering</p>
+                   </div>
                 </div>
-              </div>
-            </div>
+                <div className="flex items-center h-6">
+                  <input type="checkbox" className="w-12 h-6 bg-gray-200 checked:bg-[#008060] rounded-full appearance-none cursor-pointer relative after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all checked:after:translate-x-6" />
+                </div>
+             </div>
 
-            {/* Sovereign Auto-Pilot Section */}
-            <div className="premium-card p-10 bg-gradient-to-br from-white to-[#f9fafb]">
-               <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center space-x-4">
-                     <div className="p-3 bg-blue-50 text-[#005bd3] rounded-2xl">
-                        <Zap size={24} />
-                     </div>
-                     <div>
-                        <h3 className="text-xl font-black text-[#1a1a1a] tracking-tight">Sovereign Auto-Pilot</h3>
-                        <p className="text-xs font-bold text-[#6d7175] uppercase tracking-widest">Autonom Operasjonalisering</p>
-                     </div>
-                  </div>
-                  <div className="flex items-center h-6">
-                    <input type="checkbox" className="w-12 h-6 bg-gray-200 checked:bg-[#008060] rounded-full appearance-none cursor-pointer relative after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all checked:after:translate-x-6" />
-                  </div>
-               </div>
+             <div className="glass-panel p-6 rounded-3xl mb-8 space-y-6 bg-white/40 border-white/60">
+                <div className="flex items-start space-x-4">
+                   <ShieldAlert size={20} className="text-[#005bd3] mt-1" />
+                   <div className="space-y-4 flex-1">
+                      <p className="text-sm font-bold text-[#1a1a1a]">Sikkerhets-rails for Auto-Pilot</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-[#6d7175] uppercase tracking-wider">Maks dags-endring</label>
+                            <div className="flex items-center space-x-3">
+                               <input type="range" min="1" max="15" defaultValue="5" className="flex-1 accent-[#005bd3]" />
+                               <span className="text-xs font-black text-[#1a1a1a]">5%</span>
+                            </div>
+                         </div>
+                         <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-[#6d7175] uppercase tracking-wider">Klasser Tillatt</label>
+                            <div className="flex space-x-2">
+                               <span className="px-3 py-1 bg-[#1a1a1a] text-white text-[10px] font-black rounded-lg">Klasse C</span>
+                               <span className="px-3 py-1 bg-gray-100 text-gray-300 text-[10px] font-black rounded-lg">Klasse B</span>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+             </div>
 
-               <div className="glass-panel p-6 rounded-3xl mb-8 space-y-6 bg-white/40 border-white/60">
-                  <div className="flex items-start space-x-4">
-                     <ShieldAlert size={20} className="text-[#005bd3] mt-1" />
-                     <div className="space-y-4 flex-1">
-                        <p className="text-sm font-bold text-[#1a1a1a]">Sikkerhets-rails for Auto-Pilot</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                           <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-[#6d7175] uppercase tracking-widest">Maks dags-endring</label>
-                              <div className="flex items-center space-x-3">
-                                 <input type="range" min="1" max="15" defaultValue="5" className="flex-1 accent-[#005bd3]" />
-                                 <span className="text-xs font-black text-[#1a1a1a]">5%</span>
-                              </div>
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-[10px] font-bold text-[#6d7175] uppercase tracking-widest">Klasser Tillatt</label>
-                              <div className="flex space-x-2">
-                                 <span className="px-3 py-1 bg-[#1a1a1a] text-white text-[10px] font-black rounded-lg">Klasse C</span>
-                                 <span className="px-3 py-1 bg-gray-100 text-gray-300 text-[10px] font-black rounded-lg">Klasse B</span>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-
-               <p className="text-[10px] text-[#6d7175] italic leading-relaxed">
-                 Auto-Pilot er avskrudd som standard. Når aktivert vil systemet pushe prisoppdateringer for standard-varer (Klasse C) direkte til Shopify så lenge alle sikkerhets-regler er overholdt. Ingen manuell godkjenning kreves.
-               </p>
-            </div>
-
-              <div className="pt-6 border-t border-[#f1f2f3] flex items-center justify-between">
+             <p className="text-[10px] text-[#6d7175] italic leading-relaxed">
+               Auto-Pilot er avskrudd som standard. Når aktivert vil systemet pushe prisoppdateringer for standard-varer (Klasse C) direkte til Shopify så lenge alle sikkerhets-regler er overholdt. Ingen manuell godkjenning kreves.
+             </p>
+             
+             <div className="mt-10 pt-6 border-t border-[#f1f2f3] flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-[#202223]">Daglig Dag-oppsummering</p>
                   <p className="text-xs text-[#6d7175]">Send e-post oversikt over alle ventende godkjenninger.</p>
@@ -358,8 +339,7 @@ export default function AutomationSettings() {
                     className="polaris-input py-1 px-2 w-24 text-xs font-bold"
                   />
                 </div>
-              </div>
-            </div>
+             </div>
           </div>
         </div>
       </div>

@@ -30,7 +30,7 @@ export function validateAutopilotChange(
 
   // 2. Safety Check: Hard Floor
   const profitability = calculateProfitability(suggestedPrice, cost);
-  if (profitability.margin < (vaultSettings.minMargin || 5)) {
+  if (profitability.roiPercentage < (vaultSettings.minMargin || 5)) {
     return { shouldAutoPush: false, reason: "Forslag bryter minimumsmargin (Floor)." };
   }
 

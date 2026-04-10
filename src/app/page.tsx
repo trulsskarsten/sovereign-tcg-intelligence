@@ -126,7 +126,7 @@ export default function MerchantDashboard() {
                    </div>
                    <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-[11px] font-bold text-[#1a1a1a]">Fisker (ROI > 50%)</p>
+                        <p className="text-[11px] font-bold text-[#1a1a1a]">Fisker (ROI &gt; 50%)</p>
                         <p className="text-[10px] text-[#6d7175]">Ekte margin-vinnere</p>
                       </div>
                       <span className="text-xs font-bold text-[#108043]">+4</span>
@@ -138,8 +138,4 @@ export default function MerchantDashboard() {
       </div>
     </DashboardShell>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

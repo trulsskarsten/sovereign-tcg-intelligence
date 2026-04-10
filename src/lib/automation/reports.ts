@@ -5,7 +5,6 @@
  * inventory and audit reports.
  */
 
-import { generateDailySnapshot } from "@/lib/database/utils"; // Mock
 
 export interface ReportLink {
   reportId: string;
