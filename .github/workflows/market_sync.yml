@@ -1,0 +1,15 @@
+name: Skarsten TCG Sync
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Every 6 hours
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync_market_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Sync
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/sync/market" \
+          -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}"

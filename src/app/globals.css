@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #fdfdfd;
+  --color-surface: #ffffff;
+  --color-primary: #005bd3;
+  --color-secondary: #008060;
+  --color-border: #f1f2f3;
+  --color-text: #1a1a1a;
+  --color-text-subdued: #6d7175;
+  
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.4);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-text antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: -0.012em;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply backdrop-blur-md bg-white/70 border border-white/40 shadow-[0_8px_32px_0_rgba(0,0,0,0.05)];
+  }
+
+  .premium-card {
+    @apply bg-white rounded-3xl border border-[#f1f2f3] shadow-[0_2px_12px_rgba(0,0,0,0.02)] transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)];
+  }
+
+  .polaris-card {
+    @apply premium-card p-6 overflow-hidden;
+  }
+  
+  .polaris-header {
+    @apply glass-panel px-6 py-4 flex items-center justify-between sticky top-0 z-50;
+  }
+
+  .polaris-nav-item {
+    @apply flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors;
+  }
+
+  .polaris-nav-item-active {
+    @apply bg-[#edeeef] text-primary;
+  }
+
+  .polaris-nav-item-inactive {
+    @apply text-text-subdued hover:bg-[#f1f2f3] hover:text-text;
+  }
+  
+  .polaris-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase;
+  }
+}
+
+/* Custom scrollbar for Polaris feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #dbdbdb;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c1c1c1;
+}
