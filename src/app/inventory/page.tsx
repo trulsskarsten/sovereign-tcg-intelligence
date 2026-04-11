@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { 
   Search, 
   Filter, 
@@ -40,9 +43,9 @@ export default function Inventory() {
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     fetchData();
-  });
+  }, []);
 
   const handleManualSync = async () => {
     setIsSyncing(true);
