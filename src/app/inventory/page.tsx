@@ -12,7 +12,7 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
-  Plus
+  Plus, Package
 } from "lucide-react";
 import { i18n, formatCurrency, formatPercent } from "@/lib/i18n";
 import { useUI } from "@/components/Providers";
