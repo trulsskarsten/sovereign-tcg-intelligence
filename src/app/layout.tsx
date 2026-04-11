@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 import { UIProvider } from "@/components/Providers";
 
-const font = Inter({ subsets: ["latin"] });
+const font = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-jakarta'
+});
 
 export const metadata: Metadata = {
   title: "Sovereign TCG Intelligence",
@@ -19,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="no" className="h-full antialiased" suppressHydrationWarning>
       <body 
-        className={`${font.className} min-h-full bg-[#fdfdfd] text-[#1a1a1a] flex flex-col`}
+        className={`${font.variable} font-sans min-h-full bg-[#fdfdfd] text-[#1a1a1a] flex flex-col`}
         suppressHydrationWarning
       >
         <UIProvider>

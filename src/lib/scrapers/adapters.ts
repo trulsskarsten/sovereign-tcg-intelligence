@@ -89,6 +89,50 @@ export async function scrapePokevarsler(query: string): Promise<ScrapedProduct[]
 }
 
 /**
+ * Scraper for Outland.no
+ */
+export async function scrapeOutland(query: string): Promise<ScrapedProduct[]> {
+  const url = `https://www.outland.no/catalogsearch/result/?q=${encodeURIComponent(query)}`;
+  
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+      }
+    });
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    const results: ScrapedProduct[] = [];
+    
+    // Outland uses .product-item-info for their product cards
+    $(".product-item-info").each((_, el) => {
+      const name = $(el).find(".product-item-link").text().trim();
+      const priceText = $(el).find(".price").first().text().trim();
+      const isOutOfStock = $(el).find(".stock.unavailable").length > 0;
+      
+      if (name && priceText) {
+        // Handle Norwegian price format (e.g., 499,00 kr)
+        const price = parseFloat(priceText.replace(/[^\d,]/g, "").replace(",", "."));
+        
+        results.push({
+          name,
+          price,
+          source: "outland.no",
+          stockStatus: isOutOfStock ? "OUT_OF_STOCK" : "IN_STOCK"
+        });
+      }
+    });
+    
+    return results;
+  } catch (err) {
+    console.error("Outland scrap error:", err);
+    return [];
+  }
+}
+
+/**
  * Consensus logic to calculate Market stats from multiple sources
  */
 export function calculateConsensus(allResults: ScrapedProduct[]) {
@@ -102,11 +146,11 @@ export function calculateConsensus(allResults: ScrapedProduct[]) {
   const highest = Math.max(...prices);
   const average = prices.reduce((a, b) => a + b, 0) / prices.length;
   
-  // Simple mean calculation
+  // Simple median calculation
   const sorted = [...prices].sort((a, b) => a - b);
-  const mean = sorted.length % 2 === 0 
+  const median = sorted.length % 2 === 0 
     ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 
     : sorted[Math.floor(sorted.length / 2)];
 
-  return { lowest, highest, average, mean, count: prices.length };
+  return { lowest, highest, average, median, count: prices.length };
 }

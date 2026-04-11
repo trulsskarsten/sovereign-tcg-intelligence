@@ -5,6 +5,8 @@
 
 export const i18n = {
   common: {
+    brandName: "Sovereign",
+    brandFull: "Sovereign Intelligens",
     dashboard: "Kontrollpanel",
     inventory: "Varebeholdning",
     purchases: "Innkjøpslogg",
@@ -40,15 +42,15 @@ export const i18n = {
   },
   setup: {
     wizardTitle: "Oppsett-veiviser",
-    welcomeTitle: "Velkommen til din TCG-sentral",
-    welcomeSub: "La oss sette opp ditt kontrollpanel for profesjonelt salg.",
+    welcomeTitle: "Velkommen til Sovereign",
+    welcomeSub: "La oss sette opp ditt profesjonelle kontrollpanel for TCG-handel.",
     step1: "Hent API-nøkler",
     step2: "Koble til Shopify",
     step3: "Aktiver Varslinger",
     step4: "Fullfør Oppsett",
     testConnection: "Test Tilkobling",
     startDemo: "Se Demo nå",
-    demoSub: "Utforsk kontrollpanelet med eksempel-data før du kobler til din egen butikk.",
+    demoSub: "Utforsk Sovereign med eksempel-data før du kobler til din egen butikk.",
   }
 };
 

@@ -156,3 +156,73 @@ export async function updateProductPrice(variantId: string, newPrice: number, cu
     input: { id: variantId, price: newPrice.toString() },
   }, generateIdempotencyKey("price", variantId));
 }
+
+/**
+ * Bulk Syncing Logic
+ * Fetches all products and variants from Shopify and updates Supabase
+ */
+export async function syncStoreVariants(shopDomain: string) {
+  const query = `
+    query getProducts($cursor: String) {
+      products(first: 50, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          title
+          vendor
+          productType
+          variants(first: 100) {
+            nodes {
+              id
+              sku
+              title
+              price
+              barcode
+              inventoryQuantity
+              inventoryItem {
+                id
+                unitCost { amount }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  let hasNextPage = true;
+  let cursor = null;
+  let totalSynced = 0;
+
+  while (hasNextPage) {
+    const response = await shopifyQuery(query, { cursor });
+    const products = response.data.products;
+
+    for (const product of products.nodes) {
+      for (const variant of product.variants.nodes) {
+        const { error } = await supabase
+          .from('inventory')
+          .upsert({
+            shop_domain: shopDomain,
+            variant_id: variant.id,
+            product_name: `${product.title} - ${variant.title}`,
+            sku: variant.sku || `NOSKU-${variant.id.split('/').pop()}`,
+            barcode: variant.barcode || null,
+            brand: product.vendor || "Ukjent",
+            category: product.productType || "TCG",
+            stock: variant.inventoryQuantity || 0,
+            cost: parseFloat(variant.inventoryItem.unitCost?.amount || "0"),
+            price: parseFloat(variant.price || "0"),
+            last_sync: new Date().toISOString()
+          }, { onConflict: 'variant_id' });
+
+        if (!error) totalSynced++;
+      }
+    }
+
+    hasNextPage = products.pageInfo.hasNextPage;
+    cursor = products.pageInfo.endCursor;
+  }
+
+  return { totalSynced };
+}
+

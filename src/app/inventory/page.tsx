@@ -1,130 +1,215 @@
-"use client";
-
-import React, { useState } from "react";
-import DashboardShell from "@/components/DashboardShell";
 import { 
   Search, 
   Filter, 
   ArrowUpDown, 
   MoreHorizontal, 
   ExternalLink,
-  Info
+  Info,
+  Loader2,
+  AlertTriangle,
+  RefreshCw,
+  Plus
 } from "lucide-react";
 import { i18n, formatCurrency, formatPercent } from "@/lib/i18n";
 import { useUI } from "@/components/Providers";
 import { formatPrice, calculateROI } from "@/lib/pricing";
+import { cn } from "@/lib/utils";
 
 export default function Inventory() {
   const { priceMode } = useUI();
-  // Mock data representing a typical Norwegian TCG inventory
-  const [items] = useState([
-    { id: 1, name: "Paldean Fates Elite Trainer Box", sku: "POK-PF-ETB", stock: 12, cost: 499, price: 649, margin: 23 },
-    { id: 2, name: "151 Ultra Premium Collection", sku: "POK-151-UPC", stock: 5, cost: 1199, price: 1499, margin: 20 },
-    { id: 3, name: "Shiny Treasure ex Booster Box", sku: "POK-SV4A-BB", stock: 24, cost: 650, price: 899, margin: 27 },
-    { id: 4, name: "Paradox Rift Booster Display", sku: "POK-PR-DISP", stock: 8, cost: 1050, price: 1399, margin: 25 },
-  ]);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/inventory');
+      const json = await res.json();
+      if (json.success) {
+        setItems(json.data);
+      } else {
+        setError(json.error);
+      }
+    } catch (err) {
+      setError("Kunne ikke hente varebeholdning");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useState(() => {
+    fetchData();
+  });
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    try {
+      await fetch('/api/shopify/sync', { method: 'POST' });
+      await fetchData();
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const filteredItems = items.filter(item => 
+    item.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <DashboardShell>
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#202223] tracking-tight">{i18n.inventory.title}</h1>
-          <p className="text-sm text-[#6d7175] mt-1">{i18n.inventory.subtitle}</p>
+      <div className="max-w-7xl mx-auto space-y-8 py-10 px-6">
+        <div className="flex items-end justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-[#1a1a1a] tracking-tighter">{i18n.inventory.title}</h1>
+            <p className="text-sm text-[#6d7175] font-medium">{i18n.inventory.subtitle}</p>
+          </div>
+          <div className="flex items-center space-x-4">
+             <button 
+               onClick={handleManualSync}
+               disabled={isSyncing}
+               className="flex items-center px-4 py-2.5 bg-white border border-[#f1f2f3] rounded-xl text-[11px] font-black uppercase tracking-widest text-[#1a1a1a] shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+             >
+               {isSyncing ? <Loader2 size={14} className="mr-2 animate-spin" /> : <RefreshCw size={14} className="mr-2" />}
+               Synkroniser
+             </button>
+             <button className="flex items-center px-6 py-2.5 bg-[#005bd3] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:scale-105 active:scale-95 transition-all">
+               <Plus size={16} className="mr-2" /> {i18n.inventory.addProduct}
+             </button>
+          </div>
         </div>
 
         {/* Filters & Actions */}
-        <div className="polaris-card p-4 flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6d7175]" size={16} />
+        <div className="glass-panel p-6 flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 border-blue-100/30">
+          <div className="relative flex-1 max-w-xl">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6d7175]" size={18} />
             <input 
               type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={i18n.inventory.search} 
-              className="polaris-input pl-10 h-10"
+              className="w-full bg-[#fdfdfd] border border-[#f1f2f3] rounded-2xl pl-12 pr-4 h-12 text-sm font-bold focus:ring-2 focus:ring-[#005bd3] outline-none transition-all placeholder:text-[#d2d5d9]"
             />
           </div>
-          <div className="flex space-x-3">
-            <button className="polaris-btn-secondary flex items-center">
-              <Filter size={16} className="mr-2" /> Filtrer
-            </button>
-            <button className="polaris-btn-primary">
-              {i18n.inventory.addProduct}
-            </button>
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-2 text-[10px] font-black text-[#6d7175] uppercase tracking-widest">
+              <Filter size={14} />
+              <span>Filter</span>
+            </div>
+            <div className="flex items-center space-x-2 text-[10px] font-black text-[#6d7175] uppercase tracking-widest">
+              <ArrowUpDown size={14} />
+              <span>Sortering</span>
+            </div>
           </div>
         </div>
 
         {/* Data Table */}
-        <div className="polaris-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f9fafb] border-b border-[#f1f2f3]">
-              <tr>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider">Produkt</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider">{i18n.inventory.sku}</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider text-right">{i18n.inventory.stock}</th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider text-right">
-                  {i18n.inventory.unitCost} 
-                  <span className="ml-1 text-[#6d7175] normal-case font-normal">({priceMode === "net" ? "Eks." : "Inkl."} MVA)</span>
-                </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider text-right">
-                  {i18n.inventory.sellingPrice}
-                  <span className="ml-1 text-[#6d7175] normal-case font-normal">({priceMode === "net" ? "Eks." : "Inkl."} MVA)</span>
-                </th>
-                <th className="px-6 py-4 text-[10px] font-bold text-[#202223] uppercase tracking-wider text-right">{i18n.inventory.margin}</th>
-                <th className="px-6 py-4 w-10"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f1f2f3]">
-              {items.map((item) => (
-                <tr key={item.id} className="hover:bg-[#f9fafb] group transition-colors">
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-medium text-[#202223] group-hover:text-[#005bd3] transition-colors">{item.name}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs text-[#6d7175] font-mono">{item.sku}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={cn(
-                      "text-xs font-semibold px-2 py-0.5 rounded-full",
-                      item.stock < 10 ? "bg-[#fff4f4] text-[#c02d2d]" : "bg-[#f1f2f3] text-[#202223]"
-                    )}>
-                      {item.stock} stk
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className="text-xs text-[#202223]">{formatCurrency(formatPrice(item.cost, priceMode))}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className="text-xs text-[#202223] font-semibold">{formatCurrency(formatPrice(item.price, priceMode))}</span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <span className={cn(
-                      "text-xs font-bold",
-                      item.margin > 25 ? "text-[#108043]" : "text-[#202223]"
-                    )}>
-                      {formatPercent(calculateROI(item.cost, item.price, priceMode) / formatPrice(item.price, priceMode) * 100)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="text-[#6d7175] hover:text-[#202223]">
-                      <MoreHorizontal size={16} />
-                    </button>
-                  </td>
+        <div className="glass-panel overflow-hidden border-none shadow-2xl">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#f1f2f3]">
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em]">Produkt</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em]">{i18n.inventory.sku}</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em] text-right">{i18n.inventory.stock}</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em] text-right">
+                    {i18n.inventory.unitCost} 
+                  </th>
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em] text-right">
+                    {i18n.inventory.sellingPrice}
+                  </th>
+                  <th className="px-8 py-5 text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em] text-right">ROI</th>
+                  <th className="px-8 py-5 w-10"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="px-6 py-4 bg-[#f9fafb] border-t border-[#f1f2f3] flex items-center justify-between text-[11px] text-[#6d7175]">
-            <p>Viser {items.length} av {items.length} produkter</p>
-            <div className="flex space-x-2">
-              <button disabled className="px-2 py-1 rounded border border-[#d2d5d9] bg-white opacity-50 cursor-not-allowed">Forrige</button>
-              <button disabled className="px-2 py-1 rounded border border-[#d2d5d9] bg-white opacity-50 cursor-not-allowed">Neste</button>
+              </thead>
+              <tbody className="divide-y divide-[#f1f2f3]">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td colSpan={7} className="px-8 py-6">
+                        <div className="h-4 bg-[#f1f2f3] rounded w-full"></div>
+                      </td>
+                    </tr>
+                  ))
+                ) : filteredItems.length > 0 ? (
+                  filteredItems.map((item) => {
+                    const margin = calculateROI(item.cost, item.price, priceMode);
+                    const roiPercent = (margin / formatPrice(item.cost, priceMode)) * 100;
+                    
+                    return (
+                      <tr key={item.id} className="hover:bg-[#f1f2f3]/30 group transition-all duration-300">
+                        <td className="px-8 py-6">
+                          <div className="space-y-0.5">
+                            <p className="text-[13px] font-bold text-[#1a1a1a] group-hover:text-[#005bd3] transition-colors line-clamp-1">{item.product_name}</p>
+                            <p className="text-[9px] font-black text-[#6d7175] uppercase tracking-tighter">Variant #{item.variant_id.split('/').pop()}</p>
+                          </div>
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className="text-[11px] font-black text-[#6d7175] font-mono bg-[#f1f2f3] px-2 py-0.5 rounded">{item.sku}</span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <span className={cn(
+                            "text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter border",
+                            item.stock < 5 ? "bg-red-50 text-red-600 border-red-100" : "bg-gray-50 text-[#1a1a1a] border-gray-100"
+                          )}>
+                            {item.stock} stk
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <span className="text-xs font-bold text-[#1a1a1a]">{formatCurrency(formatPrice(item.cost, priceMode))}</span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <span className="text-xs font-black text-[#1a1a1a]">{formatCurrency(formatPrice(item.price, priceMode))}</span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <span className={cn(
+                            "text-xs font-black tracking-tighter",
+                            roiPercent > 30 ? "text-[#108043]" : "text-[#1a1a1a]"
+                          )}>
+                            {formatPercent(roiPercent)}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                          <button className="p-2 text-[#d2d5d9] hover:text-[#1a1a1a] hover:bg-white rounded-lg transition-all border border-transparent hover:border-[#f1f2f3]">
+                            <MoreHorizontal size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-8 py-20 text-center">
+                       <div className="flex flex-col items-center justify-center space-y-4">
+                          <div className="w-16 h-16 bg-[#f1f2f3] rounded-3xl flex items-center justify-center text-[#d2d5d9]">
+                             <Package size={32} />
+                          </div>
+                          <div className="space-y-1">
+                             <p className="text-sm font-black text-[#1a1a1a]">Ingen treff</p>
+                             <p className="text-xs text-[#6d7175]">Prøv et annet søkeord eller synkroniser på nytt.</p>
+                          </div>
+                       </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="px-8 py-5 border-t border-[#f1f2f3] flex items-center justify-between">
+            <p className="text-[10px] font-black text-[#6d7175] uppercase tracking-widest">
+              Viser {filteredItems.length} av {items.length} varianter
+            </p>
+            <div className="flex space-x-3">
+              <button disabled className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed">Forrige</button>
+              <button disabled className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed">Neste</button>
             </div>
           </div>
         </div>
       </div>
     </DashboardShell>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(" ");
 }

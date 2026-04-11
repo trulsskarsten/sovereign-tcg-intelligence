@@ -29,7 +29,6 @@ const navigation = [
   { name: "Innkjøpslogg", href: "/purchases", icon: ShoppingCart },
   { name: "Anbefalinger", href: "/recommendations", icon: TrendingUp },
   { name: "Google Helse", href: "/hub/google-health", icon: Zap },
-  { name: "MVA-bokføring", href: "/vat", icon: Receipt },
   { name: i18n.common.setup, href: "/setup", icon: Settings },
 ];
 
@@ -47,27 +46,29 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     toggleCommandCenter 
   } = useUI();
 
-  // Mock safety status for pulse logic
-  const safetyStatus = "red"; // In production, this would come from a context/hook
+  // Unified safety status
+  const safetyStatus = "blue"; // Normalized for calibration
 
   return (
-    <div className="flex h-screen bg-[#f6f6f7] overflow-hidden">
-      {/* Demo Banner */}
-      {isDemo && (
-        <div className="fixed top-0 left-0 w-full h-1 bg-[#f02d44] z-[100]" />
-      )}
+    <div className="flex h-screen bg-[#fdfdfd] overflow-hidden font-sans">
+      {/* Background Ambience */}
+      <div className="fixed inset-0 bg-[radial-gradient(at_top_right,rgba(0,91,211,0.03),transparent_50%),radial-gradient(at_bottom_left,rgba(0,128,96,0.03),transparent_50%)] pointer-events-none" />
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-[#ebebeb] border-r border-[#d2d5d9] flex-shrink-0">
-        <div className="p-6 flex items-center space-x-3">
-          <div className="w-8 h-8 bg-[#202223] rounded-md flex items-center justify-center text-white shadow-sm overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
-            <TrendingUp size={16} className="relative z-10" />
+      <aside className="hidden lg:flex flex-col w-64 bg-white/40 backdrop-blur-xl border-r border-[#f1f2f3] flex-shrink-0 relative z-20">
+        <div className="p-8 flex items-center space-x-3">
+          <div className="w-9 h-9 bg-[#1a1a1a] rounded-xl flex items-center justify-center text-white shadow-xl shadow-black/10 overflow-hidden relative group">
+             <motion.div 
+               animate={{ rotate: [0, 10, 0] }} 
+               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+               className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-emerald-500/20" 
+             />
+             <TrendingUp size={18} className="relative z-10" />
           </div>
-          <span className="font-bold text-[#202223] tracking-tight text-sm">TCG Ops</span>
+          <span className="font-extrabold text-[#1a1a1a] tracking-tighter text-lg">{i18n.common.brandName}</span>
         </div>
         
-        <nav className="flex-1 px-3 space-y-0.5 pointer-events-auto">
+        <nav className="flex-1 px-4 space-y-1 pointer-events-auto">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -75,77 +76,73 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "polaris-nav-item",
-                  isActive ? "polaris-nav-item-active shadow-sm" : "polaris-nav-item-inactive"
+                  "flex items-center px-4 py-2.5 text-[13px] font-bold rounded-xl transition-all duration-300",
+                  isActive 
+                    ? "bg-white text-[#005bd3] shadow-[0_4px_12px_rgba(0,0,0,0.04)] border border-[#f1f2f3]" 
+                    : "text-[#6d7175] hover:text-[#1a1a1a] hover:bg-white/60"
                 )}
               >
-                <item.icon className={cn("h-4 w-4 mr-3", isActive ? "text-[#005bd3]" : "text-[#6d7175]")} />
+                <item.icon className={cn("h-4 w-4 mr-3 transition-colors", isActive ? "text-[#005bd3]" : "text-[#6d7175] group-hover:text-[#1a1a1a]")} />
                 {item.name}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-[#d2d5d9]">
-          <div className="flex items-center p-2 rounded-lg hover:bg-[#f1f2f3] cursor-pointer group transition-colors">
-            <div className="w-8 h-8 rounded-full bg-[#005bd3] flex items-center justify-center text-[10px] font-bold text-white uppercase shadow-inner">
-              S
+        <div className="p-6 border-t border-[#f1f2f3]">
+          <div className="flex items-center p-3 rounded-2xl bg-white/40 border border-white/60 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+            <div className="w-9 h-9 rounded-full bg-[#005bd3] flex items-center justify-center text-[11px] font-black text-white shadow-inner">
+              {i18n.common.brandName[0]}
             </div>
             <div className="ml-3 overflow-hidden">
               <div className="flex items-center space-x-2">
-                <p className="text-sm font-medium text-[#202223] truncate font-bold">Forhandler</p>
-                <span className="text-[8px] bg-[#005bd3]/10 text-[#005bd3] px-1.5 py-0.5 rounded-full font-bold border border-[#005bd3]/20">BETA PIONEER</span>
+                <p className="text-xs font-black text-[#1a1a1a] truncate">Pioneer Merchant</p>
               </div>
-              <p className="text-[10px] text-[#6d7175] truncate uppercase tracking-tighter">Enterprise Admin</p>
+              <p className="text-[10px] text-[#005bd3] font-bold uppercase tracking-tighter">Enterprise</p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* Main Container with Push Drawer Logic */}
+      {/* Main Container */}
       <motion.div 
         layout
-        className="flex-1 flex flex-col min-w-0 relative h-full"
+        className="flex-1 flex flex-col min-w-0 relative h-full z-10"
         animate={{ 
           marginRight: isStatusOpen && typeof window !== 'undefined' && window.innerWidth >= 1024 
             ? 'clamp(300px, 25vw, 450px)' 
             : 0 
         }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        transition={{ type: "spring", damping: 28, stiffness: 220 }}
       >
         {/* Header */}
-        <header className="polaris-header h-14 sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-[#d2d5d9] px-6">
+        <header className="h-16 sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-[#f1f2f3] px-8 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button className="lg:hidden p-2 text-[#6d7175]" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu size={20} />
             </button>
             <div>
-              <h1 className="text-xs font-bold text-[#202223] uppercase tracking-widest flex items-center">
+              <h2 className="text-[10px] font-black text-[#6d7175] uppercase tracking-[0.2em] mb-0.5">
                 {navigation.find(n => n.href === pathname)?.name || "Dashbord"}
-              </h1>
-              <div className="flex items-center space-x-2 mt-0.5">
-                {viewMode === "advanced" && (
-                  <span className="text-[9px] bg-[#005bd3] text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-tighter">AVANSERT</span>
-                )}
+              </h2>
+              <div className="flex items-center space-x-2">
+                <span className="text-[11px] font-bold text-[#1a1a1a]">{i18n.common.brandFull}</span>
                 {isDemo && (
-                  <span className="text-[9px] font-bold text-[#f02d44] tracking-wider uppercase flex items-center">
-                    <AlertTriangle size={9} className="mr-1" /> DEMO
-                  </span>
+                  <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter border border-red-200">DEMO</span>
                 )}
               </div>
             </div>
           </div>
           
           <div className="flex items-center space-x-6">
-            {/* Universal Price Toggle (Net/Gross) */}
-            <div className="hidden sm:flex items-center bg-[#f1f2f3] rounded-full p-0.5 border border-[#d2d5d9]">
+            <div className="hidden sm:flex items-center bg-[#f1f2f3]/50 rounded-full p-1 border border-[#f1f2f3]">
               <button
                 onClick={() => priceMode === "gross" && togglePriceMode()}
                 className={cn(
-                  "px-3 py-1 rounded-full text-[10px] font-bold transition-all",
+                  "px-4 py-1.5 rounded-full text-[10px] font-bold transition-all",
                   priceMode === "net" 
-                    ? "bg-[#202223] text-white shadow-sm" 
-                    : "text-[#6d7175] hover:text-[#202223]"
+                    ? "bg-white text-[#1a1a1a] shadow-sm" 
+                    : "text-[#6d7175] hover:text-[#1a1a1a]"
                 )}
               >
                 Eks. MVA
@@ -153,63 +150,51 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => priceMode === "net" && togglePriceMode()}
                 className={cn(
-                  "px-3 py-1 rounded-full text-[10px] font-bold transition-all",
+                  "px-4 py-1.5 rounded-full text-[10px] font-bold transition-all",
                   priceMode === "gross" 
-                    ? "bg-[#202223] text-white shadow-sm" 
-                    : "text-[#6d7175] hover:text-[#202223]"
+                    ? "bg-white text-[#1a1a1a] shadow-sm" 
+                    : "text-[#6d7175] hover:text-[#1a1a1a]"
                 )}
               >
                 Inkl. MVA
               </button>
             </div>
 
-            {/* Live Status Orb Logic */}
             <button 
               onClick={toggleStatus}
-              className="group flex items-center space-x-4 text-[#6d7175] hover:text-[#202223] transition-colors focus:outline-none"
+              className="group flex items-center space-x-3 focus:outline-none"
             >
-              <span className="text-[11px] font-bold uppercase tracking-widest hidden md:inline">Live Status</span>
-              <div className="relative">
-                {/* Passive Heartbeat Pulse (Halo) */}
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#6d7175] hidden md:inline">Live Engine</span>
+              <div className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500",
+                isStatusOpen ? "bg-[#1a1a1a] text-white shadow-xl shadow-black/10" : "bg-[#f1f2f3] shadow-inner"
+              )}>
                 <div className={cn(
-                  "absolute -inset-2 rounded-full opacity-30 blur-sm transition-all duration-1000",
-                  safetyStatus === "red" ? "bg-red-500 animate-[pulse_1s_infinite]" : "opacity-0"
+                  "w-2 h-2 rounded-full",
+                  safetyStatus === "blue" ? "bg-[#005bd3] shadow-[0_0_8px_rgba(0,91,211,0.5)] animate-pulse" : "bg-gray-300"
                 )} />
-                
-                <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center relative z-10 transition-all duration-500",
-                  isStatusOpen ? "bg-[#202223] text-white rotate-90" : "bg-[#f1f2f3] shadow-inner"
-                )}>
-                  <div className={cn(
-                    "w-2.5 h-2.5 rounded-full transition-colors duration-500",
-                     safetyStatus === "red" ? "bg-red-500" : (isStatusOpen ? "bg-[#108043]" : "bg-[#005bd3]")
-                  )} />
-                </div>
               </div>
             </button>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 border-l border-[#f1f2f3] pl-6">
               <button 
                 onClick={toggleCommandCenter}
-                className="p-2 text-[#6d7175] hover:bg-[#f1f2f3] rounded-full transition-all group relative"
+                className="p-2 text-[#6d7175] hover:bg-white hover:shadow-sm rounded-full transition-all group relative border border-transparent hover:border-[#f1f2f3]"
               >
                 <Search size={18} />
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 text-[8px] bg-[#202223] text-white px-1.5 py-0.5 rounded transition-opacity whitespace-nowrap">
-                  Cmd + K
-                </span>
               </button>
-              <button className="p-2 text-[#6d7175] hover:bg-[#f1f2f3] rounded-full transition-colors relative">
+              <button className="p-2 text-[#6d7175] hover:bg-white hover:shadow-sm rounded-full transition-all relative border border-transparent hover:border-[#f1f2f3]">
                 <Bell size={18} />
-                <div className="absolute top-2 right-2 w-1.5 h-1.5 bg-[#f02d44] rounded-full ring-2 ring-white" />
+                <div className="absolute top-2 right-2 w-2 h-2 bg-[#f02d44] rounded-full ring-2 ring-white" />
               </button>
             </div>
           </div>
         </header>
 
         {isDemo && (
-          <div className="bg-[#fff4f4] border-b border-[#f9caca] px-6 py-1 text-center shrink-0">
-            <p className="text-[9px] font-bold text-[#c02d2d] uppercase tracking-widest italic">
-              Demo-miljø — Ingen endringer lagres til butikken
+          <div className="bg-red-50/80 backdrop-blur-md border-b border-red-100 px-6 py-1.5 text-center shrink-0">
+            <p className="text-[10px] font-black text-red-600 uppercase tracking-widest flex items-center justify-center">
+              <AlertTriangle size={12} className="mr-2" /> {i18n.common.demoWarning}
             </p>
           </div>
         )}

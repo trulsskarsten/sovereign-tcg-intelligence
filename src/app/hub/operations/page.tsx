@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DashboardShell from "@/components/DashboardShell";
 import { 
   Activity, 
@@ -11,153 +11,240 @@ import {
   CheckCircle2,
   Clock,
   Terminal,
-  Database
+  Database,
+  Cpu,
+  Globe,
+  Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export default function OperationalHealth() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pulse, setPulse] = useState(0);
 
-  // Mock Health States
+  useEffect(() => {
+    const interval = setInterval(() => setPulse(p => (p + 1) % 100), 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   const services = [
-    { name: "Stealth Scraper", status: "online", lastPulse: "3 min siden", health: 98.4, icon: Server },
-    { name: "Shopify Sync Engine", status: "online", lastPulse: "1 min siden", health: 100, icon: RefreshCcw },
-    { name: "Discord Alert Bridge", status: "online", lastPulse: "12 min siden", health: 100, icon: Activity },
-    { name: "Panic Lock Sentinel", status: "active", lastPulse: "Nå", health: 100, icon: ShieldCheck },
+    { 
+      name: "Stealth Scraper", 
+      status: "aktiv", 
+      lastPulse: "3 min siden", 
+      health: 98, 
+      icon: Globe,
+      description: "Markedsovervåking (Outland, Pokepris)"
+    },
+    { 
+      name: "Shopify Sync", 
+      status: "aktiv", 
+      lastPulse: "Nå", 
+      health: 100, 
+      icon: RefreshCcw,
+      description: "Sanntids lager- og pris-synkronisering"
+    },
+    { 
+      name: "Assistent Engine", 
+      status: "aktiv", 
+      lastPulse: "12 min siden", 
+      health: 100, 
+      icon: Cpu,
+      description: "AI-drevet beslutningsstøtte"
+    },
+    { 
+      name: "Panic Lock", 
+      status: "klar", 
+      lastPulse: "Nå", 
+      health: 100, 
+      icon: Lock,
+      description: "Sikkerhetsmargin-sperre"
+    },
   ];
 
   const auditLogs = [
-    { id: 1, type: "info", message: "Markedssjekk fullført (Outland, Pokepris)", time: "12:45", date: "IDAG" },
-    { id: 2, type: "warning", message: "Sikkerhets-sperre utløst: 151 Ultra Premium Collection oversteg 300kr grense", time: "11:20", date: "IDAG" },
-    { id: 3, type: "success", message: "Automatisk pris-oppdatering pushet til Shopify (8 produkter)", time: "09:00", date: "IDAG" },
-    { id: 4, type: "error", message: "Bot-deteksjon blokkerte forespørsel til Outland (Cool-down aktivert)", time: "06:15", date: "IDAG" },
+    { id: 1, type: "info", message: "Automatisk ABC-kategorisering fullført for 1,294 produkter.", time: "12:45", date: "IDAG" },
+    { id: 2, type: "warning", message: "Sikkerhetssperre utløst: '151 Ultra Premium' endring blokkert (Margin < 15%)", time: "11:20", date: "IDAG" },
+    { id: 3, type: "success", message: "Bulk-oppdatering vellykket: 42 priser synkronisert til Shopify.", time: "09:00", date: "IDAG" },
+    { id: 4, type: "info", message: "System-vask fullført: Fjernet 12 utgåtte variabler fra lokal cache.", time: "06:15", date: "GÅR" },
   ];
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
+    setTimeout(() => setIsRefreshing(false), 1500);
   };
 
   return (
     <DashboardShell>
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+      <div className="max-w-7xl mx-auto space-y-10 font-sans">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl font-bold text-[#202223] tracking-tight">Operasjonell Helse</h1>
-            <p className="text-sm text-[#6d7175] mt-1">Sanntids telemetri for systemets kjerne-tjenester og sikkerhets-logg.</p>
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">Sovereign Live Telemetry</span>
+            </div>
+            <h1 className="text-4xl font-extrabold text-[#1a1a1a] tracking-tight">Operasjonell Status</h1>
+            <p className="text-sm text-[#6d7175] mt-2 font-medium">Overvåking av systemets kjerne-tjenester og sikkerhetslogg.</p>
           </div>
+          
           <button 
             onClick={handleRefresh}
-            className="polaris-btn-secondary flex items-center"
+            className="glass-panel px-6 py-3 text-[11px] font-black uppercase tracking-widest text-[#1a1a1a] hover:bg-white transition-all flex items-center shadow-lg active:scale-95"
           >
-            <RefreshCcw size={16} className={cn("mr-2", isRefreshing && "animate-spin")} /> Oppdater Status
+            <RefreshCcw size={14} className={cn("mr-2 text-[#005bd3]", isRefreshing && "animate-spin")} /> 
+            Oppdater Telemetri
           </button>
         </div>
 
-        {/* Service Status Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {services.map((service) => (
-            <div key={service.name} className="polaris-card p-6 flex flex-col items-center text-center">
-              <div className="w-12 h-12 bg-[#f1f2f3] rounded-full flex items-center justify-center text-[#202223] mb-4">
-                <service.icon size={24} />
+        {/* Server Status Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {services.map((service, idx) => (
+            <motion.div 
+              key={service.name}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="premium-card p-6 flex flex-col group relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                <service.icon size={64} />
               </div>
-              <h3 className="text-xs font-bold text-[#202223] uppercase tracking-wider">{service.name}</h3>
-              <div className="mt-2 flex items-center">
-                <div className={cn(
-                  "w-1.5 h-1.5 rounded-full mr-2",
-                  service.status === "online" || service.status === "active" ? "bg-[#108043]" : "bg-[#c02d2d]"
-                )} />
-                <span className="text-[10px] font-bold text-[#6d7175] uppercase">{service.status}</span>
+
+              <div className="flex items-start justify-between mb-6">
+                <div className="w-10 h-10 glass-panel flex items-center justify-center text-[#005bd3]">
+                  <service.icon size={20} />
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] font-black text-[#1a1a1a] uppercase block">Helse</span>
+                  <span className="text-lg font-black text-[#005bd3]">{service.health}%</span>
+                </div>
               </div>
-              <div className="mt-4 w-full bg-[#f1f2f3] h-1.5 rounded-full overflow-hidden">
-                <div 
-                  className="bg-[#108043] h-full transition-all duration-1000" 
-                  style={{ width: `${service.health}%` }} 
-                />
+
+              <h3 className="text-sm font-black text-[#1a1a1a] mb-1">{service.name}</h3>
+              <p className="text-[10px] text-[#6d7175] font-bold mb-4">{service.description}</p>
+
+              <div className="mt-auto pt-4 border-t border-[#f1f2f3] flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
+                  <span className="text-[9px] font-black uppercase text-emerald-600 tracking-tighter">{service.status}</span>
+                </div>
+                <span className="text-[9px] text-[#6d7175] font-bold">{service.lastPulse}</span>
               </div>
-              <div className="mt-2 flex justify-between w-full text-[9px] text-[#6d7175]">
-                <span>Puls: {service.lastPulse}</span>
-                <span className="font-bold">{service.health}% helse</span>
-              </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Audit Log */}
-          <div className="lg:col-span-2 polaris-card overflow-hidden flex flex-col">
-            <div className="px-6 py-4 border-b border-[#f1f2f3] flex items-center justify-between">
-              <h2 className="font-semibold text-[#202223] flex items-center">
-                <Terminal size={18} className="mr-2 text-[#005bd3]" /> Sikkerhets-logg
-              </h2>
-              <span className="text-[10px] font-bold text-[#6d7175] uppercase tracking-tighter">Siste 100 hendelser</span>
+          {/* Security Log */}
+          <div className="lg:col-span-2 glass-panel overflow-hidden border-none p-0">
+            <div className="px-8 py-6 border-b border-[#f1f2f3] flex items-center justify-between bg-white/40">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-[#1a1a1a] rounded-lg text-white">
+                  <Terminal size={14} />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-[#1a1a1a] uppercase tracking-tighter">Hendelseslogg</h2>
+                  <p className="text-[10px] text-[#6d7175] font-bold">Audit-logger for B2B compliance</p>
+                </div>
+              </div>
             </div>
-            <div className="divide-y divide-[#f1f2f3] flex-1">
+
+            <div className="divide-y divide-[#f1f2f3]">
               {auditLogs.map((log) => (
-                <div key={log.id} className="px-6 py-4 hover:bg-[#f9fafb] transition-colors group">
-                  <div className="flex items-start">
-                    <div className="flex flex-col items-center mr-6 border-r border-[#d2d5d9] pr-6">
-                      <span className="text-[10px] font-bold text-[#202223]">{log.time}</span>
-                      <span className="text-[8px] text-[#6d7175] uppercase tracking-tighter">{log.date}</span>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          {log.type === "error" && <AlertCircle size={14} className="text-[#c02d2d]" />}
-                          {log.type === "warning" && <ShieldCheck size={14} className="text-[#f49342]" />}
-                          {log.type === "success" && <CheckCircle2 size={14} className="text-[#108043]" />}
-                          <p className={cn(
-                            "text-sm font-medium",
-                            log.type === "error" ? "text-[#c02d2d]" : "text-[#202223]"
-                          )}>
-                            {log.message}
-                          </p>
-                        </div>
-                        {log.type === "warning" && (
-                          <span className="text-[9px] font-bold bg-[#fff4e5] text-[#663c00] px-2 py-0.5 rounded uppercase">Margin Block</span>
+                <div key={log.id} className="px-8 py-5 hover:bg-white/40 transition-colors group cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-6">
+                      <div className="text-center w-12 border-r border-[#f1f2f3] pr-6">
+                        <p className="text-[11px] font-black text-[#1a1a1a]">{log.time}</p>
+                        <p className="text-[8px] font-black text-[#6d7175] uppercase">{log.date}</p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        {log.type === "warning" ? (
+                          <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                            <ShieldCheck size={14} />
+                          </div>
+                        ) : log.type === "success" ? (
+                          <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
+                            <CheckCircle2 size={14} />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                            <Activity size={14} />
+                          </div>
                         )}
+                        <p className={cn(
+                          "text-xs font-bold",
+                          log.type === "warning" ? "text-red-600" : "text-[#1a1a1a]"
+                        )}>
+                          {log.message}
+                        </p>
                       </div>
                     </div>
+                    {log.type === "warning" && (
+                      <span className="text-[8px] font-black transition-all bg-red-100 text-red-700 px-2 py-1 rounded-full uppercase tracking-tighter">Action Required</span>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="p-4 bg-[#f9fafb] border-t border-[#f1f2f3] text-center">
-              <button className="text-[11px] font-bold text-[#005bd3] hover:underline uppercase tracking-widest">
-                Se fullstendig logg
+            <div className="p-6 bg-white/20 border-t border-[#f1f2f3] text-center">
+              <button className="text-[10px] font-black text-[#005bd3] hover:tracking-widest transition-all uppercase">
+                Last ned fullstendig Audit-rapport (CSV)
               </button>
             </div>
           </div>
 
-          {/* Database & Sync Stats */}
-          <div className="space-y-8">
-            <div className="polaris-card p-6">
-              <h2 className="font-semibold text-[#202223] flex items-center mb-6">
-                <Database size={18} className="mr-2 text-[#005bd3]" /> Driftsdata
-              </h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#6d7175]">Prispunkter lagret</span>
-                  <span className="font-bold text-[#202223]">12,842</span>
+          {/* Infrastructure Metrics */}
+          <div className="space-y-6">
+            <div className="premium-card p-8">
+              <div className="flex items-center space-x-3 mb-8">
+                <Database size={20} className="text-[#005bd3]" />
+                <h2 className="text-sm font-black text-[#1a1a1a] uppercase tracking-tighter">Systemkapasitet</h2>
+              </div>
+              
+              <div className="space-y-6">
+                <div>
+                  <div className="flex justify-between text-[10px] font-black uppercase mb-2">
+                    <span className="text-[#6d7175]">Database-belastning</span>
+                    <span className="text-[#1a1a1a]">12%</span>
+                  </div>
+                  <div className="h-1.5 bg-[#f1f2f3] rounded-full overflow-hidden">
+                    <div className="bg-[#005bd3] h-full w-[12%] rounded-full shadow-[0_0_8px_rgba(0,91,211,0.5)]" />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#6d7175]">Margin Blocks (Total)</span>
-                  <span className="font-bold text-[#c02d2d]">142</span>
+
+                <div>
+                  <div className="flex justify-between text-[10px] font-black uppercase mb-2">
+                    <span className="text-[#6d7175]">Shopify API Quota</span>
+                    <span className="text-[#1a1a1a]">98%</span>
+                  </div>
+                  <div className="h-1.5 bg-[#f1f2f3] rounded-full overflow-hidden">
+                    <div className="bg-emerald-500 h-full w-[98%] rounded-full shadow-[0_0_8px_rgba(16,128,67,0.5)]" />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[#6d7175]">Est. Tap Unngått</span>
-                  <span className="font-bold text-[#108043]">4,250 kr</span>
+
+                <div className="pt-4 grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-[#f8f9fa] rounded-2xl text-center border border-[#f1f2f3]">
+                    <p className="text-[10px] font-black text-[#6d7175] uppercase mb-1">Prispunkter</p>
+                    <p className="text-xl font-black text-[#1a1a1a]">12.8k</p>
+                  </div>
+                  <div className="p-4 bg-[#f8f9fa] rounded-2xl text-center border border-[#f1f2f3]">
+                    <p className="text-[10px] font-black text-[#6d7175] uppercase mb-1">Reprices</p>
+                    <p className="text-xl font-black text-emerald-600">842</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="polaris-card p-6 bg-[#f0f7ff] border-none shadow-sm">
+            <div className="glass-panel p-6 bg-gradient-to-br from-[#005bd3]/5 to-transparent border-none">
               <div className="flex items-center text-[#005bd3] mb-4">
                 <ShieldCheck size={20} className="mr-2" />
-                <span className="text-xs font-bold uppercase tracking-wider">Alt i rute</span>
+                <span className="text-[10px] font-black uppercase tracking-widest">Assistent Status</span>
               </div>
-              <p className="text-xs text-[#6d7175] leading-relaxed">
-                Repricer-motoren overvåker nå 1,294 produkter. Ingen "Hard-Floor" brudd detektert de siste 2 timene.
+              <p className="text-[11px] text-[#6d7175] leading-relaxed font-medium">
+                Assistenten overvåker nå markedet hvert 15. minutt. Alle priser er innenfor de norske regnskaps-standardene.
               </p>
             </div>
           </div>
