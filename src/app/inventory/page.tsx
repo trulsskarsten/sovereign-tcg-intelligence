@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DashboardShell from "@/components/DashboardShell";
 import { 
   Search, 
   Filter, 
