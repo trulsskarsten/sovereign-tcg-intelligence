@@ -1,4 +1,6 @@
-import { 
+"use client";
+import React from "react";
+import {
   TrendingUp, 
   Package, 
   BarChart3, 
