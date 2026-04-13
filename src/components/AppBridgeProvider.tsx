@@ -25,14 +25,17 @@ function TokenExchangeHandler({
 
   useEffect(() => {
     async function performExchange() {
-      const fetchUrl = `${window.location.origin}/api/auth/token-exchange`;
+      const fetchUrl = `${window.location.origin}/api/auth/token-exchange?v=${Date.now()}`;
       try {
         const sessionToken = await getSessionToken(app);
         const shop = searchParams.get('shop');
 
         const response = await fetch(fetchUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate'
+          },
           body: JSON.stringify({ sessionToken, shop: shop || undefined }),
         });
 
@@ -128,6 +131,9 @@ function AppBridgeContent({ children }: { children: ReactNode }) {
                 Initialiserer sikker tilkobling...
               </p>
             </div>
+            <div className="absolute bottom-8 text-[8px] font-mono text-[#005bd340] uppercase tracking-tighter">
+              VER: REV-FINAL
+            </div>
           </div>
         </div>
       )}
@@ -161,6 +167,9 @@ function AppBridgeContent({ children }: { children: ReactNode }) {
               <RotateCcw size={14} />
               <span>Prøv på nytt</span>
             </button>
+            <div className="text-[8px] font-mono text-gray-300 uppercase tracking-tighter pt-4">
+              VER: REV-FINAL
+            </div>
           </div>
         </div>
       )}

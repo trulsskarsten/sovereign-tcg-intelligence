@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { encrypt } from "@/lib/auth/encrypt";
 import { logger } from "@/lib/logger";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Shopify Token Exchange (OAuth v2 Managed Installation)
  * Ref: https://shopify.dev/docs/apps/auth/get-access-tokens/token-exchange
