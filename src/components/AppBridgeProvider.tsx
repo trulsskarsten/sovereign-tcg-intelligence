@@ -35,6 +35,13 @@ function TokenExchangeHandler({
           body: JSON.stringify({ sessionToken, shop: shop || undefined }),
         });
 
+        // 3. Handle non-JSON responses (404/500 HTML pages)
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const htmlPreview = await response.text();
+          throw new Error(`Serveren returnerte ikke JSON (${response.status} ${response.statusText}). Sjekk Vercel-logger for feil. Preview: ${htmlPreview.substring(0, 50)}...`);
+        }
+
         const data = await response.json();
 
         if (!response.ok) {

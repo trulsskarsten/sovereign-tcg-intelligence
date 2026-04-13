@@ -8,6 +8,9 @@ import { logger } from "@/lib/logger";
  * Ref: https://shopify.dev/docs/apps/auth/get-access-tokens/token-exchange
  */
 export async function POST(req: NextRequest) {
+  // LOUD DIAGNOSTIC LOG (visible in Vercel logs)
+  console.log("[DEBUG] Token exchange route hit at", new Date().toISOString());
+
   try {
     const body = await req.json();
     let { sessionToken, shop } = body;
@@ -23,12 +26,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // DIAGNOSTIC LOG: Confirm the API is reached
-    await supabaseAdmin.from('audit_logs').insert({
-      action: 'DIAGNOSTIC',
-      message: `Token exchange hit for ${shop || 'unknown shop'}`,
-      payload: { shop, hasToken: !!sessionToken }
-    });
+    // DIAGNOSTIC LOG: Confirm the API is reached (safely)
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        action: 'DIAGNOSTIC',
+        message: `Token exchange hit for ${shop || 'unknown shop'}`,
+        payload: { shop, hasToken: !!sessionToken }
+      });
+    } catch (dbErr) {
+      console.warn("[DEBUG] Diagnostic log failed (Database likely down):", dbErr);
+    }
 
     if (!sessionToken || !shop) {
       return NextResponse.json({ error: "Missing sessionToken or shop" }, { status: 400 });
