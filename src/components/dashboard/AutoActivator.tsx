@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useAppBridge } from "@shopify/app-bridge-react";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 import { usePathname } from "next/navigation";
 import { clientLogger } from "@/lib/client-logger";
 import { useToast } from "@/components/ui/Toast";
@@ -11,13 +13,26 @@ import { cn } from "@/lib/utils";
  * AutoActivator
  * Invisible component that checks for empty stores and triggers initial 
  * seeding/synchronization to ensure a great first-load experience.
+ * Now authenticated via Shopify App Bridge session tokens.
  */
 export function AutoActivator() {
+  const app = useAppBridge();
   const { toast } = useToast();
   const pathname = usePathname();
   const activated = useRef(false);
   const [showManualTrigger, setShowManualTrigger] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
+
+  const getAuthenticatedFetch = async (url: string, options: RequestInit = {}) => {
+    const token = await getSessionToken(app);
+    return fetch(url, {
+      ...options,
+      headers: {
+        ...options.headers,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
 
   const triggerActivation = async () => {
     if (isActivating) return;
@@ -25,12 +40,12 @@ export function AutoActivator() {
     activated.current = true;
     
     try {
-      clientLogger.info("Starting Master Activation...");
+      clientLogger.info("Starting Master Activation via App Bridge...");
       
       // 1. Trigger Shopify Seed (Creates real products in Shopify + Syncs to DB)
       toast("Starter Master Aktivering: Oppretter premium-produkter i Shopify...", "info");
 
-      const seedRes = await fetch("/api/internal/shopify-seed", { method: "POST" });
+      const seedRes = await getAuthenticatedFetch("/api/internal/shopify-seed", { method: "POST" });
       const seedJson = await seedRes.json();
 
       if (seedJson.success) {
@@ -52,17 +67,23 @@ export function AutoActivator() {
 
   useEffect(() => {
     async function checkActivation() {
-      if (activated.current || isActivating) return;
+      if (activated.current || isActivating || !app) return;
 
       try {
-        const healthRes = await fetch("/api/health");
+        const healthRes = await getAuthenticatedFetch("/api/health");
         const healthJson = await healthRes.json();
 
-        if (healthJson.success && healthJson.metrics.inventory_items === 0) {
-          // Empty store detected
-          const timer = setTimeout(() => setShowManualTrigger(true), 10000);
-          await triggerActivation();
-          clearTimeout(timer);
+        // If not successful or items are 0, we might need activation
+        if (!healthJson.success || healthJson.metrics?.inventory_items === 0) {
+          // Empty store detected or health check failed (likely no products yet)
+          // Show the manual trigger after 5 seconds as a safety net
+          const timer = setTimeout(() => setShowManualTrigger(true), 5000);
+          
+          if (healthJson.success && healthJson.metrics?.inventory_items === 0) {
+             await triggerActivation();
+          }
+          
+          return () => clearTimeout(timer);
         }
       } catch (err) {
         clientLogger.error("Health check failed in AutoActivator", err);
@@ -71,7 +92,7 @@ export function AutoActivator() {
     }
 
     checkActivation();
-  }, [pathname]);
+  }, [pathname, app]);
 
   if (!showManualTrigger) return null;
 
@@ -101,7 +122,7 @@ export function AutoActivator() {
              </>
           ) : (
             <>
-              Start Aktivering Manuelt
+              Tving Aktivering Manuelt
               <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </>
           )}
