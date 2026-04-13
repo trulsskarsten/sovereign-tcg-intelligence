@@ -157,8 +157,8 @@ export default function Inventory() {
                       <tr key={item.id} className="hover:bg-[#f1f2f3]/30 group transition-all duration-300">
                         <td className="px-8 py-6">
                           <div className="space-y-0.5">
-                            <p className="text-[13px] font-bold text-[#1a1a1a] group-hover:text-[#005bd3] transition-colors line-clamp-1">{item.product_name}</p>
-                            <p className="text-[9px] font-black text-[#6d7175] uppercase tracking-tighter">Variant #{item.variant_id.split('/').pop()}</p>
+                            <p className="text-[13px] font-bold text-[#1a1a1a] group-hover:text-[#005bd3] transition-colors line-clamp-1">{item.product_name || "Ukjent Produkt"}</p>
+                            <p className="text-[9px] font-black text-[#6d7175] uppercase tracking-tighter">Variant #{item.variant_id?.split('/').pop() || 'N/A'}</p>
                           </div>
                         </td>
                         <td className="px-8 py-6">

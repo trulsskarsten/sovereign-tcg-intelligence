@@ -26,23 +26,25 @@ export function AutoActivator() {
           activated.current = true;
           clientLogger.info("Empty store detected. Initializing activation...");
 
-          // 2. Trigger Seed (Instant visual data)
-          toast("Initialiserer Dashbord: Henter testdata...", "info");
+          // 2. Trigger Shopify Seed (Creates real products in Shopify)
+          toast("Initialiserer Dashbord: Oppretter premium-produkter i Shopify...", "info");
 
-          const seedRes = await fetch("/api/internal/seed", { method: "POST" });
+          const seedRes = await fetch("/api/internal/shopify-seed", { method: "POST" });
           const seedJson = await seedRes.json();
 
           if (seedJson.success) {
-            toast("Testdata Klar: Dashbordet er nå befolket med Pokémon TCG data.", "success");
+            toast("Shopify-produkter Opprettet: Synkroniserer lagerbeholdning...", "success");
             
-            // 3. Trigger Real Sync in background
-            clientLogger.info("Seeding complete. Starting background Shopify sync.");
-            fetch("/api/inventory/sync", { method: "POST" }).catch(e => 
-              clientLogger.error("Background sync failed", e)
-            );
+            // 3. Trigger Real Sync to pull the new products into the DB
+            clientLogger.info("Shopify seeding complete. Triggering inventory sync.");
+            const syncRes = await fetch("/api/inventory/sync", { method: "POST" });
+            const syncJson = await syncRes.json();
 
-            // Refresh the page data after a short delay
-            setTimeout(() => window.location.reload(), 2000);
+            if (syncJson.success) {
+              toast("Lager Synkronisert: Dashbordet er nå Live!", "success");
+              // Refresh the page data after a short delay
+              setTimeout(() => window.location.reload(), 2000);
+            }
           }
         }
       } catch (err) {

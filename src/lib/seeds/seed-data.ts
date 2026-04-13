@@ -1,6 +1,6 @@
 export interface SeedItem {
-  shopify_variant_id: string;
-  name: string;
+  variant_id: string; // Matches DB column
+  product_name: string; // Matches DB column
   sku: string;
   cost: number;
   price: number;
@@ -12,8 +12,8 @@ export interface SeedItem {
 export const POKEMON_SEED_DATA: SeedItem[] = [
   // CLASS A: High Value / Fast Moving
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-bb-evolutions",
-    name: "XY Evolutions Booster Box",
+    variant_id: "gid://shopify/ProductVariant/seed-bb-evolutions",
+    product_name: "XY Evolutions Booster Box",
     sku: "POK-XY-EVO-BB",
     cost: 4500,
     price: 8500,
@@ -22,8 +22,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "Booster Box"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-bb-burning",
-    name: "Sun & Moon Burning Shadows Booster Box",
+    variant_id: "gid://shopify/ProductVariant/seed-bb-burning",
+    product_name: "Sun & Moon Burning Shadows Booster Box",
     sku: "POK-SM-BUS-BB",
     cost: 3200,
     price: 5500,
@@ -32,8 +32,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "Booster Box"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-etb-charizard",
-    name: "Champions Path ETB - Charizard",
+    variant_id: "gid://shopify/ProductVariant/seed-etb-charizard",
+    product_name: "Champions Path ETB - Charizard",
     sku: "POK-CP-ETB-CHZ",
     cost: 850,
     price: 1350,
@@ -42,8 +42,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "ETB"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-card-zard-base",
-    name: "Charizard - Base Set (Unlimited)",
+    variant_id: "gid://shopify/ProductVariant/seed-card-zard-base",
+    product_name: "Charizard - Base Set (Unlimited)",
     sku: "POK-BS-004",
     cost: 1500,
     price: 3500,
@@ -54,8 +54,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
   
   // CLASS B: Mid Value
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-bb-lost",
-    name: "Sword & Shield Lost Origin Booster Box",
+    variant_id: "gid://shopify/ProductVariant/seed-bb-lost",
+    product_name: "Sword & Shield Lost Origin Booster Box",
     sku: "POK-SWSH-LOR-BB",
     cost: 950,
     price: 1650,
@@ -64,8 +64,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "Booster Box"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-etb-celebrations",
-    name: "Celebrations 25th Anniversary ETB",
+    variant_id: "gid://shopify/ProductVariant/seed-etb-celebrations",
+    product_name: "Celebrations 25th Anniversary ETB",
     sku: "POK-CEL-ETB",
     cost: 450,
     price: 850,
@@ -74,8 +74,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "ETB"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-tin-pika",
-    name: "Pikachu & Zekrom GX Tag Team Tin",
+    variant_id: "gid://shopify/ProductVariant/seed-tin-pika",
+    product_name: "Pikachu & Zekrom GX Tag Team Tin",
     sku: "POK-TIN-PIKZEK",
     cost: 180,
     price: 320,
@@ -86,8 +86,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
 
   // CLASS C: Lower Value / Bulk
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-pack-silver",
-    name: "Silver Tempest Booster Pack",
+    variant_id: "gid://shopify/ProductVariant/seed-pack-silver",
+    product_name: "Silver Tempest Booster Pack",
     sku: "POK-SWSH-SIT-PACK",
     cost: 32,
     price: 55,
@@ -96,8 +96,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "Pack"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-card-pika-base",
-    name: "Pikachu - Base Set",
+    variant_id: "gid://shopify/ProductVariant/seed-card-pika-base",
+    product_name: "Pikachu - Base Set",
     sku: "POK-BS-058",
     cost: 5,
     price: 25,
@@ -106,8 +106,8 @@ export const POKEMON_SEED_DATA: SeedItem[] = [
     category: "Single Card"
   },
   {
-    shopify_variant_id: "gid://shopify/ProductVariant/seed-sleeves-zard",
-    name: "Pokemon Center Sleeves - Charizard",
+    variant_id: "gid://shopify/ProductVariant/seed-sleeves-zard",
+    product_name: "Pokemon Center Sleeves - Charizard",
     sku: "ACC-SLEEV-ZARD",
     cost: 45,
     price: 125,
