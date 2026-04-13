@@ -7,6 +7,10 @@ import { logger } from "@/lib/logger";
  * Shopify Token Exchange (OAuth v2 Managed Installation)
  * Ref: https://shopify.dev/docs/apps/auth/get-access-tokens/token-exchange
  */
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed. Use POST." }, { status: 405 });
+}
+
 export async function POST(req: NextRequest) {
   // LOUD DIAGNOSTIC LOG (visible in Vercel logs)
   console.log("[DEBUG] Token exchange route hit at", new Date().toISOString());

@@ -25,27 +25,28 @@ function TokenExchangeHandler({
 
   useEffect(() => {
     async function performExchange() {
+      const fetchUrl = `${window.location.origin}/api/auth/token-exchange`;
       try {
         const sessionToken = await getSessionToken(app);
         const shop = searchParams.get('shop');
 
-        const response = await fetch('/api/auth/token-exchange', {
+        const response = await fetch(fetchUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionToken, shop: shop || undefined }),
         });
 
-        // 3. Handle non-JSON responses (404/500 HTML pages)
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const htmlPreview = await response.text();
-          throw new Error(`Serveren returnerte ikke JSON (${response.status} ${response.statusText}). Sjekk Vercel-logger for feil. Preview: ${htmlPreview.substring(0, 50)}...`);
+        let data;
+        const text = await response.text();
+        
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          throw new Error(`Uventet svarformat (${response.status} ${response.statusText}). URL: ${fetchUrl}. Rått innhold: ${text.substring(0, 100)}...`);
         }
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || 'Autentisering feilet');
+          throw new Error(data.error || `Serverfeil (${response.status})`);
         }
 
         onComplete();
