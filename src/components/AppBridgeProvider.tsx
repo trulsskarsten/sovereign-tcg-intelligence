@@ -27,35 +27,52 @@ function TokenExchangeHandler({
     async function performExchange() {
       const fetchUrl = `${window.location.origin}/api/auth/token-exchange?v=${Date.now()}`;
       try {
-        const sessionToken = await getSessionToken(app);
+        // [STEP 1] Get Session Token
+        let sessionToken;
+        try {
+          sessionToken = await getSessionToken(app);
+        } catch (tokenErr: any) {
+          throw new Error(`[TRACE: TOKEN] Kunne ikke hente session-token fra Shopify: ${tokenErr.message}`);
+        }
+
         const shop = searchParams.get('shop');
 
-        const response = await fetch(fetchUrl, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache, no-store, must-revalidate'
-          },
-          body: JSON.stringify({ sessionToken, shop: shop || undefined }),
-        });
+        // [STEP 2] Perform Fetch
+        let response;
+        try {
+          response = await fetch(fetchUrl, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'X-Diagnostics': 'true'
+            },
+            body: JSON.stringify({ sessionToken, shop: shop || undefined }),
+          });
+        } catch (fetchErr: any) {
+          throw new Error(`[TRACE: FETCH] Nettverksfeil mot ${fetchUrl}: ${fetchErr.message}`);
+        }
 
-        let data;
+        // [STEP 3] Read Response Body
         const text = await response.text();
         
+        // [STEP 4] Parse JSON
+        let data;
         try {
           data = JSON.parse(text);
         } catch (e) {
-          throw new Error(`Uventet svarformat (${response.status} ${response.statusText}). URL: ${fetchUrl}. Rått innhold: ${text.substring(0, 100)}...`);
+          throw new Error(`[TRACE: PARSE] Serveren returnerte HTML istedenfor JSON (Status ${response.status}). URL: ${fetchUrl}. Sjekk om Vercel Authentication er PÅ. Preview: ${text.substring(0, 200).replace(/</g, '&lt;')}...`);
         }
 
         if (!response.ok) {
-          throw new Error(data.error || `Serverfeil (${response.status})`);
+          throw new Error(`[TRACE: SERVER] ${data.error || 'Ukjent serverfeil'} (${response.status})`);
         }
 
         onComplete();
       } catch (error: any) {
         clientLogger.error('Auth Error', error);
-        onError(error.message || 'Kunne ikke koble til serveren');
+        // Ensure the full trace message is passed to the UI
+        onError(error.message || 'Ukjent feil i autentiseringskjeden');
       }
     }
 
