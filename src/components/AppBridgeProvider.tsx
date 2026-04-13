@@ -5,15 +5,20 @@ import { useSearchParams } from 'next/navigation';
 import { Provider, useAppBridge } from '@shopify/app-bridge-react';
 import { getSessionToken } from '@shopify/app-bridge-utils';
 import { clientLogger } from '@/lib/client-logger';
+import { AlertCircle, RotateCcw } from 'lucide-react';
 
 /**
  * Internal component to handle the backend Token Exchange.
  * Must be child of <Provider> to access useAppBridge.
  */
 function TokenExchangeHandler({ 
-  onComplete 
+  onComplete,
+  onError,
+  retryCount
 }: { 
-  onComplete: () => void 
+  onComplete: () => void;
+  onError: (msg: string) => void;
+  retryCount: number;
 }) {
   const app = useAppBridge();
   const searchParams = useSearchParams();
@@ -21,30 +26,30 @@ function TokenExchangeHandler({
   useEffect(() => {
     async function performExchange() {
       try {
-        // 1. Get Session Token from App Bridge
         const sessionToken = await getSessionToken(app);
         const shop = searchParams.get('shop');
 
-        // 2. Exchange for Access Token and Register Store
-        // We pass the shop if we have it, but the backend can now extract it from the token
         const response = await fetch('/api/auth/token-exchange', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ sessionToken, shop: shop || undefined }),
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error('Token exchange failed');
+          throw new Error(data.error || 'Autentisering feilet');
         }
 
         onComplete();
-      } catch (error) {
+      } catch (error: any) {
         clientLogger.error('Auth Error', error);
+        onError(error.message || 'Kunne ikke koble til serveren');
       }
     }
 
     performExchange();
-  }, [app, searchParams, onComplete]);
+  }, [app, searchParams, onComplete, onError, retryCount]);
 
   return null;
 }
@@ -56,8 +61,10 @@ function TokenExchangeHandler({
 function AppBridgeContent({ children }: { children: ReactNode }) {
   const searchParams = useSearchParams();
   const [appConfig, setAppConfig] = useState<{ apiKey: string; host: string } | null>(null);
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [status, setStatus] = useState<'loading' | 'authorized' | 'error'>('loading');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isMissingApiKey, setIsMissingApiKey] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const host = searchParams.get('host');
@@ -98,17 +105,66 @@ function AppBridgeContent({ children }: { children: ReactNode }) {
 
   return (
     <Provider config={appConfig}>
-      {!isAuthorized && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm z-50">
-          <div className="flex flex-col items-center gap-4 font-sans text-center">
-            <div className="w-8 h-8 border-4 border-[#005bd3] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm font-black text-[#1a1a1a] animate-pulse uppercase tracking-widest">
-              Sovereign Intelligence initialiserer...
-            </p>
+      {status === 'loading' && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white/90 backdrop-blur-md z-50">
+          <div className="flex flex-col items-center gap-6 font-sans text-center">
+            <div className="relative">
+              <div className="w-12 h-12 border-4 border-[#005bd310] rounded-full" />
+              <div className="absolute inset-0 w-12 h-12 border-4 border-[#005bd3] border-t-transparent rounded-full animate-spin" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-black text-[#1a1a1a] uppercase tracking-[0.2em]">
+                Sovereign Intelligence
+              </p>
+              <p className="text-[10px] font-bold text-[#6d7175] uppercase tracking-widest animate-pulse">
+                Initialiserer sikker tilkobling...
+              </p>
+            </div>
           </div>
         </div>
       )}
-      <TokenExchangeHandler onComplete={() => setIsAuthorized(true)} />
+
+      {status === 'error' && (
+        <div className="fixed inset-0 flex items-center justify-center bg-red-50/95 backdrop-blur-xl z-50 p-6">
+          <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-red-100 p-10 space-y-8 text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 mx-auto shadow-inner">
+              <AlertCircle size={32} />
+            </div>
+            
+            <div className="space-y-2">
+              <h1 className="text-xl font-black text-[#1a1a1a] tracking-tight uppercase">Autentisering Feilet</h1>
+              <p className="text-xs text-[#6d7175] font-medium leading-relaxed">
+                Vi kunne ikke koble Sovereing til Shopify-butikken din. Dette kan skyldes en midlertidig feil eller manglende rettigheter.
+              </p>
+            </div>
+
+            <div className="bg-[#fdf2f2] rounded-2xl p-4 text-[10px] font-mono text-left break-all text-red-700 border border-red-50">
+              DEBUG_ERROR: {errorMsg}
+            </div>
+
+            <button
+              onClick={() => {
+                setStatus('loading');
+                setErrorMsg(null);
+                setRetryCount(c => c + 1);
+              }}
+              className="w-full flex items-center justify-center space-x-2 bg-[#1a1a1a] text-white py-4 rounded-xl font-black text-xs hover:bg-black transition-all shadow-lg active:scale-95"
+            >
+              <RotateCcw size={14} />
+              <span>Prøv på nytt</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      <TokenExchangeHandler 
+        retryCount={retryCount}
+        onComplete={() => setStatus('authorized')} 
+        onError={(msg) => {
+          setStatus('error');
+          setErrorMsg(msg);
+        }}
+      />
       {children}
     </Provider>
   );

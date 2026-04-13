@@ -323,8 +323,6 @@ function DiagnosticOverlay({ isVisible, data }: { isVisible: boolean, data: any 
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    <ToastProvider>
-      <DashboardContent>{children}</DashboardContent>
-    </ToastProvider>
+    <DashboardContent>{children}</DashboardContent>
   );
 }

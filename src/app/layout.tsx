@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 import { UIProvider } from "@/components/Providers";
+import { ToastProvider } from "@/components/ui/Toast";
 import AppBridgeProvider from "@/components/AppBridgeProvider";
 import { Suspense } from "react";
 
@@ -30,13 +31,15 @@ export default function RootLayout({
       >
         <Suspense fallback={<div className="flex-1 bg-white" />}>
           <AppBridgeProvider>
-            <UIProvider>
-              <div className="flex-1 flex flex-col relative overflow-hidden">
-                <main className="relative z-10 flex-1 flex flex-col">
-                  {children}
-                </main>
-              </div>
-            </UIProvider>
+            <ToastProvider>
+              <UIProvider>
+                <div className="flex-1 flex flex-col relative overflow-hidden">
+                  <main className="relative z-10 flex-1 flex flex-col">
+                    {children}
+                  </main>
+                </div>
+              </UIProvider>
+            </ToastProvider>
           </AppBridgeProvider>
         </Suspense>
       </body>
