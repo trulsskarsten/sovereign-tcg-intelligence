@@ -93,7 +93,8 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Kunne ikke fullføre registrering";
     logger.error({ err }, "Token exchange route error");
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
