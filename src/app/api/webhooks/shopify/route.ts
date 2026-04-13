@@ -21,9 +21,10 @@ export async function POST(req: NextRequest) {
     await sendDiscordAlert(`Webhook Received: ${topic} for ${shop}`, "INFO");
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal Server Error";
     logger.error({ err }, "Webhook Error");
-    await sendDiscordAlert(`Webhook Failed: ${topic} for ${shop}. Error: ${err.message}`, "ERROR");
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    await sendDiscordAlert(`Webhook Failed: ${topic} for ${shop}. Error: ${message}`, "ERROR");
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

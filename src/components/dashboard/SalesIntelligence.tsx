@@ -93,7 +93,7 @@ export function SalesVelocityChart() {
           <YAxis hide />
           <Tooltip
             contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', fontSize: '12px' }}
-            formatter={(val: number) => [`${val.toLocaleString('no-NO')} kr`, 'Verdi']}
+            formatter={(val: any) => [`${Number(val).toLocaleString('no-NO')} kr`, 'Verdi']}
           />
           <Area
             type="monotone"

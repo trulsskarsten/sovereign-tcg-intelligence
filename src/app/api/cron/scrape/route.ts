@@ -116,8 +116,9 @@ export async function POST(req: Request) {
     });
 
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Scraping Cron Error";
     logger.error({ err }, "Scraping Cron Error");
-    await sendDiscordAlert(`Scraping Cron Failure: ${err.message}`, "ERROR");
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    await sendDiscordAlert(`Scraping Cron Failure: ${message}`, "ERROR");
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

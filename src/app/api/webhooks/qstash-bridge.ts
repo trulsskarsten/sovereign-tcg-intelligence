@@ -56,7 +56,8 @@ export async function POST(req: Request) {
     }, { status: 200 });
 
   } catch (err: unknown) {
-    log.error({ error: err.message }, "[Webhook Error]");
+    const message = err instanceof Error ? err.message : "Internal Server Error";
+    log.error({ error: message }, "[Webhook Error]");
     return new NextResponse('Webhook processing failed', { status: 500 });
   }
 }

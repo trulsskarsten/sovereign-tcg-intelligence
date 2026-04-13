@@ -60,7 +60,8 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain, store_id })
       results.push({ topic: webhook.topic, success: true });
       logger.info({ shop_domain, topic: webhook.topic }, "Webhook registered");
     } catch (err: unknown) {
-      results.push({ topic: webhook.topic, success: false, error: err.message });
+      const message = err instanceof Error ? err.message : "Internal Server Error";
+      results.push({ topic: webhook.topic, success: false, error: message });
       logger.error({ err, shop_domain, topic: webhook.topic }, "Webhook registration failed");
     }
   }

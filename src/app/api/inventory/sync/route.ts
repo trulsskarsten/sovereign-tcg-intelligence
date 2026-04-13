@@ -19,11 +19,12 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain }) => {
       message: `Synkronisering fullført: ${result.totalSynced} varer oppdatert.`
     });
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Synkronisering feilet";
     logger.error({ err, shop_domain }, "Inventory sync API error");
     return NextResponse.json({
       success: false,
       error: "Synkronisering feilet",
-      details: err.message
+      details: message
     }, { status: 500 });
   }
 });

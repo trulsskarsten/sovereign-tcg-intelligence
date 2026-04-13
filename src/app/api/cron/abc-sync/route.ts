@@ -72,7 +72,8 @@ export async function POST(req: Request) {
     });
 
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "ABC Engine Error";
     logger.error({ err }, "ABC Engine Error");
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

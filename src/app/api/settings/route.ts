@@ -68,9 +68,10 @@ export const PUT = withAuth(async (req: NextRequest, { shop_domain, store_id }) 
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: "Ugyldig innstillingsformat", details: err.errors }, { status: 400 });
+      return NextResponse.json({ error: "Ugyldig innstillingsformat", details: err.issues }, { status: 400 });
     }
+    const message = err instanceof Error ? err.message : "Kunne ikke lagre innstillinger";
     logger.error({ err, shop_domain }, "Failed to update settings");
-    return NextResponse.json({ error: "Kunne ikke lagre innstillinger" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 });

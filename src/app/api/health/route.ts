@@ -53,7 +53,8 @@ export const GET = withAuth(async (req: NextRequest, { shop_domain, store_id }) 
       timestamp: new Date().toISOString()
     });
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "System health check failed";
     logger.error({ err, shop_domain }, "System health check failed");
-    return NextResponse.json({ success: false, status: "degraded", error: err.message }, { status: 500 });
+    return NextResponse.json({ success: false, status: "degraded", error: message }, { status: 500 });
   }
 });
