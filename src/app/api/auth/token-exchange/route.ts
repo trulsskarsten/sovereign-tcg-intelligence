@@ -121,9 +121,15 @@ export async function POST(req: NextRequest) {
       store_id: store.id 
     });
 
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Kunne ikke fullføre registrering";
-    logger.error({ err }, "Token exchange route error");
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: any) {
+    // UNMASK ERROR: Ensure we see the real message even if it's not a standard Error instance
+    const message = err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+    
+    logger.error({ err, shop: (req as any)._shop }, "Token exchange route error");
+    console.error("[SERVER-DEBUG] Token exchange fatal error:", message);
+    
+    return NextResponse.json({ 
+      error: message === '{}' ? "Ukjent serverfeil (tomt feilobjekt)" : message 
+    }, { status: 500 });
   }
 }
