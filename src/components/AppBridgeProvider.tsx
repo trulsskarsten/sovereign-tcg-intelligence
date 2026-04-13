@@ -149,7 +149,7 @@ function AppBridgeContent({ children }: { children: ReactNode }) {
               </p>
             </div>
             <div className="absolute bottom-8 text-[8px] font-mono text-[#005bd340] uppercase tracking-tighter">
-              VER: REV-FINAL
+              VER: REV-ULTRA
             </div>
           </div>
         </div>

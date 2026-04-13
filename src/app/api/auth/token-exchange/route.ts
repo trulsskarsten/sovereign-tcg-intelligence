@@ -17,6 +17,15 @@ export async function POST(req: NextRequest) {
   // LOUD DIAGNOSTIC LOG (visible in Vercel logs)
   console.log("[DEBUG] Token exchange route hit at", new Date().toISOString());
 
+  // [ULTRA DIAGNOSTIC] Check Environment
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    return NextResponse.json({ 
+      error: `[DATABASE-CONFIG-MISSING] Supabase keys are missing in environment. URL: ${!!supabaseUrl}, Key: ${!!supabaseKey}` 
+    }, { status: 500 });
+  }
+
   try {
     const body = await req.json();
     let { sessionToken, shop } = body;
