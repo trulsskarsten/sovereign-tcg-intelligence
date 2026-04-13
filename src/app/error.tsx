@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCcw, Home } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
