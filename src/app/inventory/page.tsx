@@ -36,11 +36,11 @@ export default function Inventory() {
     try {
       const res = await fetch(`/api/inventory?page=${page}&limit=50&q=${searchQuery}`);
       const json = await res.json();
-      if (json.success) {
-        setItems(json.data);
-        setPagination(json.pagination);
+      if (json && json.success) {
+        setItems(Array.isArray(json.data) ? json.data : []);
+        setPagination(json.pagination || { total: 0, total_pages: 0 });
       } else {
-        setError(json.error);
+        setError(json?.error || "Ukjent feil ved henting av lager");
       }
     } catch (err) {
       setError("Kunne ikke hente varebeholdning");
@@ -150,8 +150,14 @@ export default function Inventory() {
                   ))
                 ) : items.length > 0 ? (
                   items.map((item) => {
-                    const margin = calculateROI(item.cost, item.price, priceMode);
-                    const roiPercent = (item.cost > 0) ? (margin / formatPrice(item.cost, priceMode)) * 100 : 0;
+                    const costVal = parseFloat(item.cost || "0");
+                    const priceVal = parseFloat(item.price || "0");
+                    const margin = calculateROI(costVal, priceVal, priceMode);
+                    const costFormatted = formatPrice(costVal, priceMode);
+                    const roiPercent = (costFormatted > 0) ? (margin / costFormatted) * 100 : 0;
+                    
+                    // Safety check for display
+                    const displayRoi = isFinite(roiPercent) ? roiPercent : 0;
                     
                     return (
                       <tr key={item.id} className="hover:bg-[#f1f2f3]/30 group transition-all duration-300">
@@ -183,7 +189,7 @@ export default function Inventory() {
                             "text-xs font-black tracking-tighter",
                             roiPercent > 30 ? "text-[#108043]" : "text-[#1a1a1a]"
                           )}>
-                            {formatPercent(roiPercent)}
+                            {formatPercent(displayRoi)}
                           </span>
                         </td>
                         <td className="px-8 py-6 text-right">
@@ -215,7 +221,7 @@ export default function Inventory() {
           
           <div className="px-8 py-5 border-t border-[#f1f2f3] flex items-center justify-between">
             <p className="text-[10px] font-black text-[#6d7175] uppercase tracking-widest">
-              Viser {items.length} av {pagination.total} varianter
+              Viser {items?.length || 0} av {pagination?.total || 0} varianter
             </p>
             <div className="flex space-x-3">
               <button 
@@ -226,7 +232,7 @@ export default function Inventory() {
                 <ChevronLeft size={14} className="mr-1" /> Forrige
               </button>
               <button 
-                disabled={page >= pagination.total_pages || loading}
+                disabled={page >= (pagination?.total_pages || 0) || loading}
                 onClick={() => setPage(prev => prev + 1)}
                 className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest hover:bg-[#f1f2f3] transition-all disabled:opacity-50 flex items-center"
               >
