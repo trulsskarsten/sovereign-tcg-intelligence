@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 import * as cheerio from "cheerio";
 
 export interface ScrapedProduct {
@@ -20,14 +21,23 @@ export async function scrapePokepris(query: string): Promise<ScrapedProduct[]> {
     
     const results: ScrapedProduct[] = [];
     
-    // Select product cards based on research
-    $("div.product-card, div[class*='product']").each((_, el) => {
-      const name = $(el).find("h3, .title").text().trim();
-      const priceText = $(el).find("span:contains('kr')").text().trim();
+    // Select product cards based on reconnaissance (div.group is the wrapper)
+    $("div.group").each((_, el) => {
+      const name = $(el).find("h3").text().trim();
+      // Price is in a span, often contains 'kr' or ',-'
+      const priceText = $(el).find("span").filter((_, span) => {
+        const text = $(span).text();
+        return text.includes("kr") || text.includes(",-");
+      }).first().text().trim();
+      
+      const urlSuffix = $(el).find("a").attr("href");
+      const url = urlSuffix ? (urlSuffix.startsWith("http") ? urlSuffix : `https://www.pokepris.no${urlSuffix}`) : "";
+      
       const stockText = $(el).text();
       
       if (name && priceText) {
-        const price = parseFloat(priceText.replace(/[^0-9.]/g, ""));
+        // Handle Norwegian price format: 339.00 kr or 339.00,-
+        const price = parseFloat(priceText.replace(/[^\d,.]/g, "").replace(",", "."));
         const stockStatus = stockText.includes("Utsolgt") ? "OUT_OF_STOCK" : "IN_STOCK";
         
         results.push({
@@ -40,8 +50,8 @@ export async function scrapePokepris(query: string): Promise<ScrapedProduct[]> {
     });
     
     return results;
-  } catch (err) {
-    console.error("Pokepris scrap error:", err);
+  } catch (err: unknown) {
+    logger.error({ query, err }, "Pokepris scrap error");
     return [];
   }
 }
@@ -82,8 +92,8 @@ export async function scrapePokevarsler(query: string): Promise<ScrapedProduct[]
     });
     
     return results;
-  } catch (err) {
-    console.error("Pokevarsler scrap error:", err);
+  } catch (err: unknown) {
+    logger.error({ query, err }, "Pokevarsler scrap error");
     return [];
   }
 }
@@ -126,8 +136,8 @@ export async function scrapeOutland(query: string): Promise<ScrapedProduct[]> {
     });
     
     return results;
-  } catch (err) {
-    console.error("Outland scrap error:", err);
+  } catch (err: unknown) {
+    logger.error({ query, err }, "Outland scrap error");
     return [];
   }
 }

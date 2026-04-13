@@ -1,4 +1,5 @@
 import { isDryRun, generateIdempotencyKey, validatePriceChange } from "./safety";
+import { logger } from "./logger";
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -12,9 +13,7 @@ let tokenExpiry: number | null = null;
 /**
  * Ensures a valid Admin API Access Token is available.
  */
-async function getAccessToken(): Promise<string> {
-  const shopDomain = process.env.SHOPIFY_SHOP_NAME;
-  if (!shopDomain) throw new Error("Missing SHOPIFY_SHOP_NAME env var");
+async function getAccessToken(shopDomain: string): Promise<string> {
   return getShopifyAccessToken(shopDomain);
 }
 
@@ -73,11 +72,9 @@ export async function getShopifyAccessToken(shopDomain: string) {
   return newToken;
 }
 
-export async function shopifyQuery(query: string, variables = {}, idempotencyKey?: string) {
-  const shopName = process.env.SHOPIFY_SHOP_NAME;
-  const accessToken = await getAccessToken();
-
-  const endpoint = `https://${shopName}.myshopify.com/admin/api/2024-04/graphql.json`;
+export async function shopifyQuery(shopDomain: string, query: string, variables = {}, idempotencyKey?: string) {
+  const accessToken = await getAccessToken(shopDomain);
+  const endpoint = `https://${shopDomain}/admin/api/2024-04/graphql.json`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -96,7 +93,7 @@ export async function shopifyQuery(query: string, variables = {}, idempotencyKey
 
   if (!response.ok) {
     const errorBody = await response.text();
-    console.error("Shopify API Error:", errorBody);
+    logger.error({ shopDomain, errorBody }, "Shopify API Error");
     throw new Error(`Shopify API feil: ${response.status}`);
   }
 
@@ -106,31 +103,58 @@ export async function shopifyQuery(query: string, variables = {}, idempotencyKey
 /**
  * Update the cost per unit for an inventory item. (AUTOMATED)
  */
-export async function updateInventoryCost(inventoryItemId: string, cost: number) {
+export async function updateInventoryCost(shopDomain: string, inventoryItemId: string, cost: number) {
   if (isDryRun()) {
-    console.log(`[DRY RUN] Would update COST for ${inventoryItemId} to ${cost} NOK`);
+    logger.info({ shopDomain, inventoryItemId, cost }, "[DRY RUN] Would update COST");
     return { dryRun: true };
   }
 
   const mutation = `
     mutation inventoryItemUpdate($id: ID!, $input: InventoryItemInput!) {
       inventoryItemUpdate(id: $id, input: $input) {
-        inventoryItem { id unitCost }
+        inventoryItem { id }
         userErrors { field message }
       }
     }
   `;
 
-  return shopifyQuery(mutation, {
+  return shopifyQuery(shopDomain, mutation, {
     id: inventoryItemId,
     input: { cost: cost.toString() },
   }, generateIdempotencyKey("cost", inventoryItemId));
 }
 
 /**
+ * Update the inventory quantity for a specific variant.
+ */
+export async function updateInventoryLevel(shopDomain: string, variantId: string, locationId: string, available: number) {
+  if (isDryRun()) {
+    logger.info({ shopDomain, variantId, available, locationId }, "[DRY RUN] Would update QTY");
+    return { dryRun: true };
+  }
+
+  const mutation = `
+    mutation inventorySet($input: InventorySetInput!) {
+      inventorySet(input: $input) {
+        inventoryLevels { id available }
+        userErrors { field message }
+      }
+    }
+  `;
+
+  return shopifyQuery(shopDomain, mutation, {
+    input: {
+      inventoryItemId: variantId, 
+      locationId: locationId,
+      available: available
+    }
+  }, generateIdempotencyKey("qty", variantId));
+}
+
+/**
  * Update the selling price. (MANUAL APPROVAL ONLY)
  */
-export async function updateProductPrice(variantId: string, newPrice: number, currentPrice: number, isApproved: boolean) {
+export async function updateProductPrice(shopDomain: string, variantId: string, newPrice: number, currentPrice: number, isApproved: boolean) {
   if (!isApproved) {
     throw new Error("Sikkerhetsfeil: Prisendring må godkjennes manuelt.");
   }
@@ -139,7 +163,7 @@ export async function updateProductPrice(variantId: string, newPrice: number, cu
   if (!safety.isSafe) throw new Error(`Sikkerhetsfeil: ${safety.reason}`);
 
   if (isDryRun()) {
-    console.log(`[DRY RUN] Would update PRICE for ${variantId} to ${newPrice} NOK`);
+    logger.info({ shopDomain, variantId, newPrice }, "[DRY RUN] Would update PRICE");
     return { dryRun: true };
   }
 
@@ -152,7 +176,7 @@ export async function updateProductPrice(variantId: string, newPrice: number, cu
     }
   `;
 
-  return shopifyQuery(mutation, {
+  return shopifyQuery(shopDomain, mutation, {
     input: { id: variantId, price: newPrice.toString() },
   }, generateIdempotencyKey("price", variantId));
 }
@@ -162,27 +186,37 @@ export async function updateProductPrice(variantId: string, newPrice: number, cu
  * Fetches all products and variants from Shopify and updates Supabase
  */
 export async function syncStoreVariants(shopDomain: string) {
+  // 1. Get capacity limits from store configuration
+  const { data: store } = await supabase
+    .from('stores')
+    .select('id, beta_flags')
+    .eq('shop_domain', shopDomain)
+    .single();
+
+  if (!store) throw new Error(`Butikk ${shopDomain} ikke funnet.`);
+
+  const variantLimit = (store.beta_flags as any)?.max_variants || 5000;
+  
+  // Using productVariants connection for direct variant access
   const query = `
-    query getProducts($cursor: String) {
-      products(first: 50, after: $cursor) {
+    query getVariants($cursor: String, $first: Int!) {
+      productVariants(first: $first, after: $cursor) {
         pageInfo { hasNextPage endCursor }
         nodes {
+          id
+          sku
           title
-          vendor
-          productType
-          variants(first: 100) {
-            nodes {
-              id
-              sku
-              title
-              price
-              barcode
-              inventoryQuantity
-              inventoryItem {
-                id
-                unitCost { amount }
-              }
-            }
+          price
+          barcode
+          inventoryQuantity
+          product {
+            title
+            vendor
+            productType
+          }
+          inventoryItem {
+            id
+            unitCost { amount }
           }
         }
       }
@@ -192,37 +226,92 @@ export async function syncStoreVariants(shopDomain: string) {
   let hasNextPage = true;
   let cursor = null;
   let totalSynced = 0;
+  let pageCount = 0;
+  const MAX_PAGES = 50; // Cap at 50 pages of 100 variants (5000 total) to prevent timeouts
 
-  while (hasNextPage) {
-    const response = await shopifyQuery(query, { cursor });
-    const products = response.data.products;
+  logger.info({ shopDomain, variantLimit }, "Starting inventory sync with capacity limits");
 
-    for (const product of products.nodes) {
-      for (const variant of product.variants.nodes) {
-        const { error } = await supabase
-          .from('inventory')
-          .upsert({
-            shop_domain: shopDomain,
-            variant_id: variant.id,
-            product_name: `${product.title} - ${variant.title}`,
-            sku: variant.sku || `NOSKU-${variant.id.split('/').pop()}`,
-            barcode: variant.barcode || null,
-            brand: product.vendor || "Ukjent",
-            category: product.productType || "TCG",
-            stock: variant.inventoryQuantity || 0,
-            cost: parseFloat(variant.inventoryItem.unitCost?.amount || "0"),
-            price: parseFloat(variant.price || "0"),
-            last_sync: new Date().toISOString()
-          }, { onConflict: 'variant_id' });
+  while (hasNextPage && totalSynced < variantLimit && pageCount < MAX_PAGES) {
+    const response = await shopifyQuery(shopDomain, query, { 
+      cursor, 
+      first: Math.min(100, variantLimit - totalSynced) 
+    });
+    
+    if (!response?.data?.productVariants) {
+      logger.error({ response, shopDomain }, "Failed to fetch variants during sync");
+      break;
+    }
 
-        if (!error) totalSynced++;
+    const variants = response.data.productVariants;
+    pageCount++;
+
+    for (const variant of variants.nodes) {
+      const { error } = await supabase
+        .from('inventory')
+        .upsert({
+          store_id: store?.id,
+          variant_id: variant.id,
+          product_name: `${variant.product.title} - ${variant.title}`,
+          sku: variant.sku || `NOSKU-${variant.id.split('/').pop()}`,
+          barcode: variant.barcode || null,
+          brand: variant.product.vendor || "Ukjent",
+          category: variant.product.productType || "TCG",
+          stock: variant.inventoryQuantity || 0,
+          cost: parseFloat(variant.inventoryItem.unitCost?.amount || "0"),
+          price: parseFloat(variant.price || "0"),
+          last_sync: new Date().toISOString()
+        }, { onConflict: 'variant_id' });
+
+      if (error) {
+        logger.error({ error, variantId: variant.id }, "Sync error for variant");
+      } else {
+        totalSynced++;
       }
     }
 
-    hasNextPage = products.pageInfo.hasNextPage;
-    cursor = products.pageInfo.endCursor;
+    hasNextPage = variants.pageInfo.hasNextPage;
+    cursor = variants.pageInfo.endCursor;
+    
+    logger.info({ shopDomain, syncedSoFar: totalSynced, pageCount }, "Sync progress");
   }
 
-  return { totalSynced };
+  // Record stats
+  await supabase.from('audit_logs').insert({
+    store_id: store?.id,
+    action: "Bulk Inventory Sync",
+    entity_id: "system",
+    entity_type: "inventory",
+    metadata: { totalSynced, pageCount, limitReached: totalSynced >= variantLimit }
+  });
+
+  logger.info({ shopDomain, totalSynced }, "Sync completed with audit log");
+  return { totalSynced, limitReached: totalSynced >= variantLimit };
+}
+
+/**
+ * Fetches the primary location ID for a shop.
+ */
+export async function fetchPrimaryLocationId(shopDomain: string): Promise<string> {
+  const query = `
+    query {
+      locations(first: 10) {
+        nodes {
+          id
+          name
+          isPrimary
+        }
+      }
+    }
+  `;
+
+  const result = await shopifyQuery(shopDomain, query);
+  const locations = result.locations?.nodes || [];
+  const primary = locations.find((l: any) => l.isPrimary) || locations[0];
+
+  if (!primary) {
+    throw new Error("No locations found for shop");
+  }
+
+  return primary.id;
 }
 

@@ -1,4 +1,7 @@
 "use client";
+
+import React, { useState } from "react";
+import DashboardShell from "@/components/DashboardShell";
 import { 
   CheckCircle2, 
   ShieldCheck, 
@@ -18,7 +21,6 @@ import {
 import { i18n } from "@/lib/i18n";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import React, { useState } from "react";
 import { motion } from "framer-motion";
 
 export default function SetupWizard() {

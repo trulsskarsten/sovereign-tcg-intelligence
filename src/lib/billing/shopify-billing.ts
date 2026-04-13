@@ -27,21 +27,24 @@ export const BILLING_PLANS = {
 
 /**
  * Generates the GraphQL mutation for creating a recurring charge.
+ * NOTE: currencyCode NOK is a GraphQL enum value — no quotes per spec.
+ * test mode is driven by SHOPIFY_BILLING_TEST_MODE env var (defaults true for safety).
  */
 export function generateSubscriptionMutation(planName: string, shop: string, returnUrl: string) {
   const plan = Object.values(BILLING_PLANS).find(p => p.name === planName) || BILLING_PLANS.PRO;
+  const isTestMode = process.env.SHOPIFY_BILLING_TEST_MODE !== 'false';
 
   return `
     mutation appSubscriptionCreate {
       appSubscriptionCreate(
         name: "${plan.name}",
         returnUrl: "${returnUrl}",
-        test: true,
+        test: ${isTestMode},
         lineItems: [
           {
             plan: {
               appRecurringPricingDetails: {
-                price: { amount: ${plan.price}, currencyCode: NOK }
+                price: { amount: "${plan.price.toFixed(2)}", currencyCode: NOK }
                 interval: EVERY_30_DAYS
               }
             }

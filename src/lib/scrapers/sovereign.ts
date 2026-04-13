@@ -10,6 +10,14 @@
 // For this implementation, we define the architecture and logic.
 
 import { scrapePokepris, scrapeOutland } from "./adapters";
+import { logger } from "../logger";
+
+const USER_AGENTS = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0",
+];
 
 export interface ScrapeResult {
   price: number;
@@ -21,14 +29,14 @@ export interface ScrapeResult {
 /**
  * Main scraping engine.
  */
-export async function scrapeRetailer(url: string, query: string): Promise<ScrapeResult[]> {
+export async function scrapeRetailer(url: string, query: string = ""): Promise<ScrapeResult[]> {
   const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
   
   // 1. Add Randomized Jitter (Human Delay)
   const delay = Math.floor(Math.random() * 3000) + 2000; // 2-5 seconds
   await new Promise(r => setTimeout(r, delay));
 
-  console.log(`[Sovereign Scraper] Launching stealth crawl for ${url} (Query: ${query})`);
+  logger.info({ url, query }, "[Sovereign Scraper] Launching stealth crawl");
   
   try {
     let results: any[] = [];
@@ -47,7 +55,7 @@ export async function scrapeRetailer(url: string, query: string): Promise<Scrape
     }));
 
   } catch (error) {
-    console.error(`[Sovereign Scraper] Error scraping ${url}:`, error);
+    logger.error({ url, error }, "[Sovereign Scraper] Error scraping");
     throw error;
   }
 }
@@ -57,7 +65,7 @@ export async function scrapeRetailer(url: string, query: string): Promise<Scrape
  * Spreads requests over a logical period to avoid IP flagging.
  */
 export async function processScrapeQueue(urls: string[]) {
-  console.log(`[Sovereign Scraper] Processing queue of ${urls.length} items...`);
+  logger.info({ count: urls.length }, "[Sovereign Scraper] Processing queue");
   
   for (const url of urls) {
     await scrapeRetailer(url);

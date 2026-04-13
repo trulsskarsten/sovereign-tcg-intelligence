@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "./supabase";
-import { updateInventoryCost } from "./shopify";
+import { updateInventoryCost, updateInventoryLevel, fetchPrimaryLocationId } from "./shopify";
+import { logger } from "./logger";
 
 export interface PurchaseInput {
   shopifyVariantId: string;
@@ -14,7 +15,7 @@ export interface PurchaseInput {
  * 2. Updates local DB
  * 3. Syncs to Shopify
  */
-export async function processNewPurchase(input: PurchaseInput) {
+export async function processNewPurchase(shopDomain: string, input: PurchaseInput) {
   const { shopifyVariantId, qty, unitCost, vendor } = input;
 
   // 1. Fetch current inventory state from DB
@@ -88,14 +89,27 @@ export async function processNewPurchase(input: PurchaseInput) {
 
   if (purchaseError) throw purchaseError;
 
+  // 3. Log to Audit Trail
+  await supabaseAdmin.from("audit_logs").insert({
+    store_id: (await supabaseAdmin.from("inventory").select("store_id").eq("id", inventoryId).single()).data?.store_id,
+    action: "REGISTER_PURCHASE",
+    entity_type: "INVENTORY",
+    details: { qty, unitCost, newWac, newQty },
+    severity: "info"
+  });
+
   // 3. Sync to Shopify
   // A. Update Cost
-  const costSync = await updateInventoryCost(shopifyVariantId, newWac);
+  const costSync = await updateInventoryCost(shopDomain, shopifyVariantId, newWac);
   
   // B. Update Inventory Level 
-  // Note: This assumes we are setting absolute quantity. 
-  // In a multi-location setup, we'd need the locationId.
-  // const inventorySync = await updateInventoryLevel(shopifyVariantId, locationId, newQty);
+  let inventorySync = null;
+  try {
+    const locationId = await fetchPrimaryLocationId(shopDomain);
+    inventorySync = await updateInventoryLevel(shopDomain, shopifyVariantId, locationId, newQty);
+  } catch (err) {
+    logger.error({ shopifyVariantId, err }, "[WAC] Failed to sync inventory level");
+  }
 
-  return { inventoryId, newQty, newWac, costSync };
+  return { inventoryId, newQty, newWac, costSync, inventorySync };
 }

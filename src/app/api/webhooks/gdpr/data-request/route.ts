@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createLogger } from "@/lib/logger";
 import crypto from "crypto";
 
 // Sovereign GDPR Compliance Layer
@@ -23,7 +24,8 @@ export async function POST(req: Request) {
   }
 
   const payload = JSON.parse(body);
-  console.log(`[GDPR] Data Request for customer: ${payload.customer.email}`);
+  const log = createLogger({ customer_email: payload.customer.email, topic: 'customers/data_request' });
+  log.info(`[GDPR] Data Request received`);
   
   // Logic: Queue data extraction and send to merchant email
   // For Sovereign: We don't store PII, so we return a standard 'No Data' confirmed response

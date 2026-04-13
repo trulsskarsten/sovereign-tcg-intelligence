@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { syncStoreVariants } from "@/lib/shopify";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   try {
@@ -13,8 +14,8 @@ export async function POST(req: Request) {
       synced: result.totalSynced,
       message: `${result.totalSynced} variabler synkronisert.`
     });
-  } catch (error: any) {
-    console.error("Sync Error:", error);
+  } catch (error: unknown) {
+    logger.error({ error }, "Sync Error");
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

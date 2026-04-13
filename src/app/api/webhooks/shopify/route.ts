@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { logTechnicalEvent } from "@/lib/discord";
+import { sendDiscordAlert } from "@/lib/discord";
+import { logger } from "@/lib/logger";
 
 /**
  * Handle Shopify Webhooks (products/update and inventory_levels/update)
@@ -17,11 +18,11 @@ export async function POST(req: NextRequest) {
       await handleInventoryUpdate(payload);
     }
 
-    await logTechnicalEvent("Webhook Received", { topic, shop, success: true });
+    await sendDiscordAlert(`Webhook Received: ${topic} for ${shop}`, "INFO");
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    console.error("Webhook Error:", err);
-    await logTechnicalEvent("Webhook Failed", { topic, shop, error: err.message });
+  } catch (err: unknown) {
+    logger.error({ err }, "Webhook Error");
+    await sendDiscordAlert(`Webhook Failed: ${topic} for ${shop}. Error: ${err.message}`, "ERROR");
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

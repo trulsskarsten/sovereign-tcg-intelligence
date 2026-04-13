@@ -9,20 +9,32 @@ export default function FeedbackWidget() {
   const [feedback, setFeedback] = useState("");
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!feedback.trim()) return;
     setSending(true);
+    setSubmitError(null);
     
-    // Logic: This would POST to a dedicated Bridge API that sends to the SAAS OWNER'S Discord
-    // The Merchant's discord receives price alerts; the SaaS Owner receives this feedback.
-    
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ feedback }),
+      });
+      
+      if (res.ok) {
+        setSent(true);
+        setFeedback("");
+        setTimeout(() => { setIsOpen(false); setSent(false); }, 3000);
+      } else {
+        setSubmitError('En feil oppstod. Prøv igjen senere.');
+      }
+    } catch (err) {
+      setSubmitError('Nettverksfeil. Sjekk din tilkobling.');
+    } finally {
       setSending(false);
-      setSent(true);
-      setFeedback("");
-      setTimeout(() => { setIsOpen(false); setSent(false); }, 3000);
-    }, 1500);
+    }
   };
 
   return (
@@ -52,6 +64,9 @@ export default function FeedbackWidget() {
                <p className="text-[11px] text-[#6d7175] font-medium leading-relaxed">
                  Har du funnet en feil, eller har du forslag til forbedringer? Send oss en melding direkte.
                </p>
+               {submitError && (
+                 <p className="text-[10px] font-bold text-red-500 bg-red-50 rounded-xl px-3 py-2">{submitError}</p>
+               )}
                <textarea 
                  value={feedback}
                  onChange={(e) => setFeedback(e.target.value)}

@@ -14,7 +14,8 @@ import {
   Bell,
   AlertTriangle,
   Zap,
-  Search
+  Search,
+  ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { i18n } from "@/lib/i18n";
@@ -22,14 +23,14 @@ import { cn } from "@/lib/utils";
 import { UIProvider, useUI } from "./Providers";
 import StatusDrawer from "./StatusDrawer";
 import CommandCenter from "./CommandCenter";
+import { ToastProvider } from "./ui/Toast";
 
 const navigation = [
   { name: i18n.dashboard.overview, href: "/", icon: Home },
   { name: "Lagerbeholdning", href: "/inventory", icon: Package },
-  { name: "Innkjøpslogg", href: "/purchases", icon: ShoppingCart },
-  { name: "Anbefalinger", href: "/recommendations", icon: TrendingUp },
-  { name: "Google Helse", href: "/hub/google-health", icon: Zap },
-  { name: i18n.common.setup, href: "/setup", icon: Settings },
+  { name: "Staging Hub", href: "/hub/staging", icon: Zap },
+  { name: "Driftsenter", href: "/hub/operations", icon: ShieldCheck },
+  { name: i18n.common.setup, href: "/settings/automation", icon: Settings },
 ];
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
@@ -47,7 +48,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   } = useUI();
 
   // Unified safety status
-  const safetyStatus = "blue"; // Normalized for calibration
+  const safetyStatus = "blue" as "blue" | "red"; // Normalized for calibration
 
   return (
     <div className="flex h-screen bg-[#fdfdfd] overflow-hidden font-sans">
@@ -239,7 +240,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <UIProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <ToastProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </ToastProvider>
     </UIProvider>
   );
 }

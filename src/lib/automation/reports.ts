@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Secure Reporting Service
  * 
@@ -41,7 +42,7 @@ export async function generateSecureReportLink(
  * Orchestrates the monthly compliance heartbeat
  */
 export async function processMonthlyCompliance(storeId: string) {
-  console.log(`[Reports] Generating monthly audit summary for store ${storeId}...`);
+  logger.info({ storeId }, "[Reports] Generating monthly audit summary");
   
   // Create final month-end snapshot
   // await generateDailySnapshot(storeId);

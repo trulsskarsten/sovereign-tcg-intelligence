@@ -1,43 +1,41 @@
-import { NextResponse } from "next/server";
-import { shopifyQuery } from "@/lib/shopify";
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth } from "@/lib/auth/middleware";
 import { supabaseAdmin } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
 
-export async function GET() {
-  const shopifyStatus = { ok: false, message: "", details: {} };
-  const supabaseStatus = { ok: false, message: "", details: {} };
-
-  // 1. Test Shopify
+/**
+ * GET /api/diagnostics
+ * Returns detailed diagnostics for the store.
+ */
+export const GET = withAuth(async (req: NextRequest, { shop_domain, store_id }) => {
   try {
-    const data = await shopifyQuery(`{ shop { name myshopifyDomain } }`);
-    shopifyStatus.ok = true;
-    shopifyStatus.message = "Tilkoblet!";
-    shopifyStatus.details = data.data.shop;
-  } catch (err: any) {
-    shopifyStatus.ok = false;
-    shopifyStatus.message = "Feil ved tilkobling";
-    shopifyStatus.details = { error: err.message };
-  }
+    const { count: inventoryCount } = await supabaseAdmin
+      .from('inventory')
+      .select('*', { count: 'exact', head: true })
+      .eq('shop_domain', shop_domain);
 
-  // 2. Test Supabase
-  try {
-    const { data, error } = await supabaseAdmin.from("inventory").select("count").limit(1);
-    if (error) throw error;
-    supabaseStatus.ok = true;
-    supabaseStatus.message = "Database klar!";
-    supabaseStatus.details = { count: data.length };
-  } catch (err: any) {
-    supabaseStatus.ok = false;
-    supabaseStatus.message = "Databasefeil (Sjekk tabell-oppsett)";
-    supabaseStatus.details = { error: err.message };
-  }
+    const { count: updateCount } = await supabaseAdmin
+      .from('staged_updates')
+      .select('*', { count: 'exact', head: true })
+      .eq('store_id', store_id);
 
-  return NextResponse.json({
-    shopify: shopifyStatus,
-    supabase: supabaseStatus,
-    timestamp: new Date().toISOString(),
-    env: {
-      shopName: process.env.SHOPIFY_SHOP_NAME,
-      dryRun: process.env.SHOPIFY_DRY_RUN,
-    }
-  });
-}
+    const { data: recentLogs } = await supabaseAdmin
+      .from('audit_logs')
+      .select('*')
+      .eq('store_id', store_id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    return NextResponse.json({
+      success: true,
+      diagnostics: {
+        inventory_items: inventoryCount,
+        staged_updates: updateCount,
+        recent_activity: recentLogs,
+      }
+    });
+  } catch (err: unknown) {
+    logger.error({ err, shop_domain }, "Diagnostics error");
+    return NextResponse.json({ error: "Klarte ikke å hente diagnostikk" }, { status: 500 });
+  }
+});

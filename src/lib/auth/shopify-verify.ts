@@ -6,6 +6,7 @@
  */
 
 import crypto from "crypto";
+import { logger } from "../logger";
 
 export interface ShopifySession {
   shop: string;
@@ -20,16 +21,39 @@ export interface ShopifySession {
  */
 export async function verifyShopifyJwt(token: string): Promise<ShopifySession | null> {
   try {
-    // 1. In a real app, you would verify the signature using SHOPIFY_API_SECRET
-    // 2. Decode the token (Base64)
-    const payloadBase64 = token.split('.')[1];
-    const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
+    const clientSecret = process.env.SHOPIFY_CLIENT_SECRET;
+    if (!clientSecret) {
+      throw new Error("Missing SHOPIFY_CLIENT_SECRET");
+    }
 
-    // 3. Extract the 'dest' (Shop URL)
+    // 1. Split the token
+    const [headerB64, payloadB64, signatureB64] = token.split('.');
+    
+    // 2. Verify signature
+    const data = `${headerB64}.${payloadB64}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', clientSecret)
+      .update(data)
+      .digest('base64url');
+
+    if (signatureB64 !== expectedSignature) {
+      logger.error("[Auth] JWT Signature mismatch");
+      return null;
+    }
+
+    // 3. Decode payload
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
+
+    // 4. Extract the 'dest' (Shop URL)
     const shop = new URL(payload.dest).hostname;
 
-    // 4. In production, look up the internal UUID for this shop in the 'stores' table
-    // For this beta, we'll hash the shop domain to create a deterministic UUID
+    // 5. Check expiration
+    if (payload.exp < Date.now() / 1000) {
+      logger.error("[Auth] JWT expired");
+      return null;
+    }
+
+    // 6. Look up or generate internal UUID
     const storeId = crypto.createHash('sha256').update(shop).digest('hex').substring(0, 36);
 
     return {
@@ -38,7 +62,7 @@ export async function verifyShopifyJwt(token: string): Promise<ShopifySession | 
       exp: payload.exp
     };
   } catch (err) {
-    console.error("[Auth] JWT Verification failed:", err);
+    logger.error({ err }, "[Auth] JWT Verification failed");
     return null;
   }
 }

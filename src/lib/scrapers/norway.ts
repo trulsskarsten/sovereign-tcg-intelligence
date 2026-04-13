@@ -1,6 +1,5 @@
-/**
- * Norwegian TCG Retailer Scraper (Pokepris, Pokevarsler adapters)
- */
+import { scrapePokepris, scrapePokevarsler, scrapeOutland, ScrapedProduct } from "./adapters";
+import { logger } from "../logger";
 
 export interface ScraperResult {
   source: string;
@@ -10,37 +9,32 @@ export interface ScraperResult {
 }
 
 /**
- * Focused exclusively on Norwegian retailers as per user request.
+ * Aggregates prices from multiple Norwegian retailers using real scrapers.
  */
-export async function scrapeNorwegianPrices(sku: string): Promise<ScraperResult[]> {
+export async function scrapeNorwegianPrices(skuOrName: string): Promise<ScraperResult[]> {
   const results: ScraperResult[] = [];
   
   try {
-    // 1. Mock Pokepris Sync
-    results.push({
-      source: "Pokepris.no",
-      price: 549,
-      inStock: true,
-      url: `https://pokepris.no/search?q=${sku}`
+    // Parallel scraping for efficiency
+    const [pp, pv, ol] = await Promise.all([
+      scrapePokepris(skuOrName),
+      scrapePokevarsler(skuOrName),
+      scrapeOutland(skuOrName)
+    ]);
+
+    const allScraped = [...pp, ...pv, ...ol];
+
+    allScraped.forEach(item => {
+      results.push({
+        source: item.source,
+        price: item.price,
+        inStock: item.stockStatus === "IN_STOCK",
+        url: "" // adapters.ts currently doesn't return URL for all, would need extension
+      });
     });
 
-    // 2. Mock Pokevarsler Sync
-    results.push({
-      source: "Pokevarsler.no",
-      price: 599,
-      inStock: true,
-      url: `https://pokevarsler.no/product/${sku}`
-    });
-
-    // 3. Mock generic Norwegian Retailer
-    results.push({
-      source: "Outland.no",
-      price: 529,
-      inStock: false,
-      url: "https://outland.no"
-    });
   } catch (err) {
-    console.error("Scraper Error:", err);
+    logger.error({ skuOrName, err }, "Scraper aggregation error");
   }
 
   return results;
@@ -57,7 +51,6 @@ export function calculateConsensusPrice(results: ScraperResult[]): number {
 
   if (validPrices.length === 0) return 0;
   
-  // Return the median price for stability
   const mid = Math.floor(validPrices.length / 2);
   return validPrices.length % 2 !== 0 
     ? validPrices[mid] 

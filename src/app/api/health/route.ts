@@ -1,28 +1,59 @@
+import { NextRequest, NextResponse } from "next/server";
+import { withAuth } from "@/lib/auth/middleware";
+import { supabaseAdmin } from "@/lib/supabase";
+import { logger } from "@/lib/logger";
+import { shopifyQuery } from "@/lib/shopify";
+
 /**
- * System Health Heartbeat
- * 
- * Used by external monitoring tools to verify app availability.
+ * GET /api/health
+ * Returns system health status.
  */
-
-import { NextResponse } from 'next/server';
-
-export async function GET() {
-  const start = Date.now();
-
+export const GET = withAuth(async (req: NextRequest, { shop_domain, store_id }) => {
   try {
-    // 1. Basic Health Check
-    return NextResponse.json({
-      status: 'healthy',
-      version: '1.0.0-beta',
-      uptime: process.uptime(),
-      latency: `${Date.now() - start}ms`,
-      timestamp: new Date().toISOString()
-    }, { status: 200 });
+    const start = Date.now();
+    
+    // 1. Check Shopify (Lightweight Ping)
+    const pingQuery = `{ shop { name } }`;
+    let shopifyLatency = -1;
+    let shopifyStatus: "healthy" | "unhealthy" = "unhealthy";
+    
+    try {
+      await shopifyQuery(shop_domain, pingQuery);
+      shopifyLatency = Date.now() - start;
+      shopifyStatus = "healthy";
+    } catch (err: unknown) {
+      logger.error({ err, shop_domain }, "Health check: Shopify ping failed");
+    }
 
-  } catch (err) {
+    // 2. Check Database & Get Stats
+    const { count: inventoryCount, error: invError } = await supabaseAdmin
+      .from('inventory')
+      .select('*', { count: 'exact', head: true })
+      .eq('store_id', store_id);
+
+    const { count: stagedCount, error: stagedError } = await supabaseAdmin
+      .from('staged_updates')
+      .select('*', { count: 'exact', head: true })
+      .eq('store_id', store_id)
+      .eq('status', 'pending');
+    
     return NextResponse.json({
-      status: 'unhealthy',
-      error: 'System core check failed'
-    }, { status: 500 });
+      success: true,
+      status: (shopifyStatus === "healthy" && !invError) ? "healthy" : "degraded",
+      metrics: {
+        shopify_latency_ms: shopifyLatency,
+        inventory_items: inventoryCount || 0,
+        pending_updates: stagedCount || 0,
+      },
+      services: {
+        database: invError ? "unhealthy" : "healthy",
+        shopify: shopifyStatus,
+        sync_engine: "configured"
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: unknown) {
+    logger.error({ err, shop_domain }, "System health check failed");
+    return NextResponse.json({ success: false, status: "degraded", error: err.message }, { status: 500 });
   }
-}
+});

@@ -1,4 +1,5 @@
 import { shopifyQuery } from "./shopify";
+import { logger } from "./logger";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -60,7 +61,7 @@ export async function syncStoreInventory(shopDomain: string) {
   const filterQuery = `NOT product_type:Single AND NOT product_type:'Gift Card' AND NOT title:Singles AND NOT title:Enkeltkort AND NOT title:Gavekort`;
 
   try {
-    const response = await shopifyQuery(query, {
+    const response = await shopifyQuery(shopDomain, query, {
       first: 50,
       query: filterQuery
     });
@@ -102,7 +103,7 @@ export async function syncStoreInventory(shopDomain: string) {
 
     return { success: true, count: products.length };
   } catch (error) {
-    console.error("Sync Error:", error);
+    logger.error({ shopDomain, error }, "Sync Error");
     throw error;
   }
 }

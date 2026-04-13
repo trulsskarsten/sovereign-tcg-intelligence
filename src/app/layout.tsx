@@ -3,6 +3,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
 import { UIProvider } from "@/components/Providers";
+import AppBridgeProvider from "@/components/AppBridgeProvider";
+import { Suspense } from "react";
 
 const font = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -26,13 +28,17 @@ export default function RootLayout({
         className={`${font.variable} font-sans min-h-full bg-[#fdfdfd] text-[#1a1a1a] flex flex-col`}
         suppressHydrationWarning
       >
-        <UIProvider>
-          <div className="flex-1 flex flex-col relative overflow-hidden">
-            <main className="relative z-10 flex-1 flex flex-col">
-              {children}
-            </main>
-          </div>
-        </UIProvider>
+        <Suspense fallback={<div className="flex-1 bg-white" />}>
+          <AppBridgeProvider>
+            <UIProvider>
+              <div className="flex-1 flex flex-col relative overflow-hidden">
+                <main className="relative z-10 flex-1 flex flex-col">
+                  {children}
+                </main>
+              </div>
+            </UIProvider>
+          </AppBridgeProvider>
+        </Suspense>
       </body>
     </html>
   );

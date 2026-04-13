@@ -1,3 +1,4 @@
+import { logger } from "./logger";
 import { supabaseAdmin } from "./supabase";
 
 /**
@@ -35,7 +36,7 @@ export async function seedMockProducts() {
     }
   ];
 
-  console.log("Seeding mock products...");
+  logger.info("Seeding mock products...");
   
   for (const product of mockProducts) {
     const { error } = await supabaseAdmin
@@ -43,9 +44,9 @@ export async function seedMockProducts() {
       .upsert(product, { onConflict: "shopify_variant_id" });
     
     if (error) {
-      console.error(`Error seeding ${product.name}:`, error);
+      logger.error({ name: product.name, error }, "Error seeding product");
     } else {
-      console.log(`Successfully seeded ${product.name}`);
+      logger.info({ name: product.name }, "Successfully seeded product");
     }
   }
 

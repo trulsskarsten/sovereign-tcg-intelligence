@@ -12,7 +12,9 @@ import {
   ShieldCheck, 
   Info,
   Save,
-  Coffee, Package
+  Coffee,
+  Activity,
+  Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";

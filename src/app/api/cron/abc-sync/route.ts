@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { logger } from "@/lib/logger";
 
 // Sovereign ABC Engine API
 // Performs 80/20 inventory classification based on Weighted Value (Price * Stock)
@@ -70,8 +71,8 @@ export async function POST(req: Request) {
       totalValue 
     });
 
-  } catch (err: any) {
-    console.error("ABC Engine Error:", err);
+  } catch (err: unknown) {
+    logger.error({ err }, "ABC Engine Error");
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

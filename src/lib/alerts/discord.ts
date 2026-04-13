@@ -1,3 +1,4 @@
+import { logger } from "../logger";
 /**
  * Sovereign Discord Bridge
  * 
@@ -67,7 +68,7 @@ export async function sendDiscordAlert(
       })
     });
   } catch (err) {
-    console.error("Failed to send Discord alert:", err);
+    logger.error({ err }, "Failed to send Discord alert");
   }
 }
 

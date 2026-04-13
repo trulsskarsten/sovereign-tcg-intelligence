@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { clientLogger } from "@/lib/client-logger";
+import { ShieldCheck } from "lucide-react";
 
 interface CommandAction {
   id: string;
@@ -33,10 +35,13 @@ export default function CommandCenter({ isOpen, onClose }: { isOpen: boolean; on
   const actions: CommandAction[] = [
     { id: "ov", name: "Oversikt", category: "Navigasjon", icon: TrendingUp, action: () => router.push("/") },
     { id: "inv", name: "Lagerbeholdning", category: "Navigasjon", icon: Package, action: () => router.push("/inventory") },
-    { id: "pur", name: "Innkjøpslogg", category: "Navigasjon", icon: ShoppingCart, action: () => router.push("/purchases") },
-    { id: "gh", name: "Google Helse", category: "Navigasjon", icon: Zap, action: () => router.push("/hub/google-health") },
-    { id: "set", name: "Innstillinger", category: "Navigasjon", icon: Settings, action: () => router.push("/setup") },
-    { id: "sync", name: "Kjør full synkronisering", category: "Handlinger", icon: Zap, shortcut: "S", action: () => console.log("Sync started") },
+    { id: "stage", name: "Staging Hub", category: "Navigasjon", icon: Zap, action: () => router.push("/hub/staging") },
+    { id: "ops", name: "Driftsenter", category: "Navigasjon", icon: ShieldCheck, action: () => router.push("/hub/operations") },
+    { id: "set", name: "Innstillinger", category: "Navigasjon", icon: Settings, action: () => router.push("/settings/automation") },
+    { id: "sync", name: "Kjør full synkronisering", category: "Handlinger", icon: Zap, shortcut: "S", action: () => {
+      clientLogger.info("Manuel sync trigget fra kommandosenter");
+      router.push("/inventory?sync=true");
+    }},
   ];
 
   const filteredActions = actions.filter(a => 

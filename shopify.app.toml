@@ -1,0 +1,26 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "d0aa56b325956246e05a5b7cce5e8dfe"
+name = "TCG Ops"
+application_url = "https://sovereign-tcg-intelligence.vercel.app"
+embedded = true
+
+[webhooks]
+api_version = "2026-04"
+
+  [[webhooks.subscriptions]]
+  topics = [
+  "app/uninstalled",
+  "inventory_levels/update",
+  "products/update"
+]
+  uri = "/api/webhooks/shopify"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_inventory,read_inventory,read_orders,read_products,write_products"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ ]

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createLogger } from "@/lib/logger";
 import crypto from "crypto";
 
 /**
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
   const hmacHeader = req.headers.get("x-shopify-hmac-sha256");
   const topic = req.headers.get("x-shopify-topic");
   const shop = req.headers.get("x-shopify-shop-domain");
+  const log = createLogger({ service: 'gdpr-webhook', shop, topic });
 
   if (!hmacHeader) {
     return new NextResponse("Mangler signatur", { status: 401 });
@@ -32,13 +34,13 @@ export async function POST(req: NextRequest) {
   const rawBody = await req.text();
 
   if (!verifyShopifySignature(rawBody, hmacHeader)) {
-    console.error(`Uautorisert GDPR forespørsel fra ${shop}`);
+    log.error(`Unauthorized GDPR request`);
     return new NextResponse("Ugyldig signatur", { status: 401 });
   }
 
   const payload = JSON.parse(rawBody);
 
-  console.log(`[GDPR Webhook] Mottatt emne: ${topic} for butikk: ${shop}`);
+  log.info(`GDPR Webhook received`);
 
   /**
    * Topics handled:

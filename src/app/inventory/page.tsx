@@ -1,39 +1,44 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import DashboardShell from "@/components/DashboardShell";
 import { 
   Search, 
   Filter, 
   ArrowUpDown, 
   MoreHorizontal, 
-  ExternalLink,
-  Info,
-  Loader2,
-  AlertTriangle,
+  Loader2, 
   RefreshCw,
-  Plus, Package
+  Plus,
+  Package,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { i18n, formatCurrency, formatPercent } from "@/lib/i18n";
 import { useUI } from "@/components/Providers";
 import { formatPrice, calculateROI } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/Toast";
 
 export default function Inventory() {
   const { priceMode } = useUI();
+  const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, total_pages: 0 });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/inventory');
+      const res = await fetch(`/api/inventory?page=${page}&limit=50&q=${searchQuery}`);
       const json = await res.json();
       if (json.success) {
         setItems(json.data);
+        setPagination(json.pagination);
       } else {
         setError(json.error);
       }
@@ -42,26 +47,30 @@ export default function Inventory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, searchQuery]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    const timer = setTimeout(fetchData, 300);
+    return () => clearTimeout(timer);
+  }, [fetchData]);
 
   const handleManualSync = async () => {
     setIsSyncing(true);
     try {
-      await fetch('/api/shopify/sync', { method: 'POST' });
-      await fetchData();
+      const res = await fetch('/api/inventory/sync', { method: 'POST' });
+      const json = await res.json();
+      if (json.success) {
+        toast(json.message || 'Synkronisering fullført', 'success');
+        fetchData();
+      } else {
+        toast('Synkronisering feilet', 'error');
+      }
+    } catch (err) {
+      toast('Synkronisering feilet', 'error');
     } finally {
       setIsSyncing(false);
     }
   };
-
-  const filteredItems = items.filter(item => 
-    item.product_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.sku?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   return (
     <DashboardShell>
@@ -86,14 +95,16 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Filters & Actions */}
         <div className="glass-panel p-6 flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0 border-blue-100/30">
           <div className="relative flex-1 max-w-xl">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6d7175]" size={18} />
             <input 
               type="text" 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1); // Reset to page 1 on search
+              }}
               placeholder={i18n.inventory.search} 
               className="w-full bg-[#fdfdfd] border border-[#f1f2f3] rounded-2xl pl-12 pr-4 h-12 text-sm font-bold focus:ring-2 focus:ring-[#005bd3] outline-none transition-all placeholder:text-[#d2d5d9]"
             />
@@ -110,7 +121,6 @@ export default function Inventory() {
           </div>
         </div>
 
-        {/* Data Table */}
         <div className="glass-panel overflow-hidden border-none shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -138,10 +148,10 @@ export default function Inventory() {
                       </td>
                     </tr>
                   ))
-                ) : filteredItems.length > 0 ? (
-                  filteredItems.map((item) => {
+                ) : items.length > 0 ? (
+                  items.map((item) => {
                     const margin = calculateROI(item.cost, item.price, priceMode);
-                    const roiPercent = (margin / formatPrice(item.cost, priceMode)) * 100;
+                    const roiPercent = (item.cost > 0) ? (margin / formatPrice(item.cost, priceMode)) * 100 : 0;
                     
                     return (
                       <tr key={item.id} className="hover:bg-[#f1f2f3]/30 group transition-all duration-300">
@@ -205,11 +215,23 @@ export default function Inventory() {
           
           <div className="px-8 py-5 border-t border-[#f1f2f3] flex items-center justify-between">
             <p className="text-[10px] font-black text-[#6d7175] uppercase tracking-widest">
-              Viser {filteredItems.length} av {items.length} varianter
+              Viser {items.length} av {pagination.total} varianter
             </p>
             <div className="flex space-x-3">
-              <button disabled className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed">Forrige</button>
-              <button disabled className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed">Neste</button>
+              <button 
+                disabled={page <= 1 || loading}
+                onClick={() => setPage(prev => prev - 1)}
+                className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest hover:bg-[#f1f2f3] transition-all disabled:opacity-50 flex items-center"
+              >
+                <ChevronLeft size={14} className="mr-1" /> Forrige
+              </button>
+              <button 
+                disabled={page >= pagination.total_pages || loading}
+                onClick={() => setPage(prev => prev + 1)}
+                className="px-4 py-2 rounded-xl border border-[#f1f2f3] text-[10px] font-black uppercase tracking-widest hover:bg-[#f1f2f3] transition-all disabled:opacity-50 flex items-center"
+              >
+                Neste <ChevronRight size={14} className="ml-1" />
+              </button>
             </div>
           </div>
         </div>
