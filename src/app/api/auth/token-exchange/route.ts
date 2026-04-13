@@ -55,25 +55,41 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Exchange Session Token for Access Token
-    // Grant Type for managed install: urn:ietf:params:oauth:grant-type:token-exchange
-    const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
-        subject_token: sessionToken,
-        subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
-        requested_token_type: 'urn:ietf:params:oauth:token-type:offline_access_token',
-      }),
-    });
+    const shopifyUrl = `https://${shop}/admin/oauth/access_token`;
+    console.log(`[SERVER-DEBUG] Exchanging token with Shopify at: ${shopifyUrl}`);
 
-    const data = await response.json();
+    let shopifyResponse;
+    try {
+      shopifyResponse = await fetch(shopifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+          subject_token: sessionToken,
+          subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
+          requested_token_type: 'urn:ietf:params:oauth:token-type:offline_access_token',
+        }),
+      });
+    } catch (fetchErr: any) {
+      throw new Error(`Klarte ikke å kontakte Shopify (${shop}): ${fetchErr.message}`);
+    }
 
-    if (!response.ok) {
+    const responseText = await shopifyResponse.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseErr) {
+      throw new Error(`Shopify returnerte HTML istedenfor JSON (Status ${shopifyResponse.status}). Dette betyr vanligvis at appen ikke er riktig installert eller at domenet er feil. Preview: ${responseText.substring(0, 150).replace(/</g, '&lt;')}...`);
+    }
+
+    if (!shopifyResponse.ok) {
       logger.error({ data, shop }, "Shopify Token Exchange failed");
-      return NextResponse.json({ error: "Token exchange failed", details: data }, { status: 500 });
+      return NextResponse.json({ 
+        error: `Shopify avviste forespørselen: ${data.error_description || data.error || 'Ukjent feil'}`,
+        details: data 
+      }, { status: shopifyResponse.status });
     }
 
     const accessToken = data.access_token;
