@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger";
 import { z } from "zod";
 
 const purchaseSchema = z.object({
-  shopify_variant_id: z.string(),
+  variant_id: z.string(),
   qty: z.number().positive(),
   unit_cost: z.number().nonnegative(),
   vendor: z.string().optional()
@@ -21,7 +21,7 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain }) => {
     const validated = purchaseSchema.parse(body);
 
     const result = await processNewPurchase(shop_domain, {
-      shopifyVariantId: validated.shopify_variant_id,
+      variant_id: validated.variant_id,
       qty: validated.qty,
       unitCost: validated.unit_cost,
       vendor: validated.vendor

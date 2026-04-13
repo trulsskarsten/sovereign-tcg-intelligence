@@ -33,13 +33,13 @@ async function handleProductUpdate(product: any) {
     const { error } = await supabaseAdmin
       .from("inventory")
       .upsert({
-        shopify_variant_id: `gid://shopify/ProductVariant/${variant.id}`,
-        name: `${product.title} - ${variant.title}`,
+        variant_id: `gid://shopify/ProductVariant/${variant.id}`,
+        product_name: `${product.title} - ${variant.title}`,
         sku: variant.sku,
-        shopify_price: parseFloat(variant.price),
-        last_synced_at: new Date().toISOString(),
+        price: parseFloat(variant.price),
+        last_sync: new Date().toISOString(),
       }, {
-        onConflict: "shopify_variant_id"
+        onConflict: "variant_id"
       });
 
     if (error) throw error;
@@ -50,10 +50,10 @@ async function handleInventoryUpdate(inventory: any) {
   const { error } = await supabaseAdmin
     .from("inventory")
     .update({
-      current_qty: inventory.available,
-      last_synced_at: new Date().toISOString(),
+      stock: inventory.available,
+      last_sync: new Date().toISOString(),
     })
-    .eq("shopify_variant_id", `gid://shopify/ProductVariant/${inventory.inventory_item_id}`); // This is a simplification; mapping varies by API version
+    .eq("variant_id", `gid://shopify/ProductVariant/${inventory.inventory_item_id}`); 
 
   if (error) throw error;
 }

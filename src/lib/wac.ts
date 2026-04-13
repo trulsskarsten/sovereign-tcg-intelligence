@@ -3,7 +3,7 @@ import { updateInventoryCost, updateInventoryLevel, fetchPrimaryLocationId } fro
 import { logger } from "./logger";
 
 export interface PurchaseInput {
-  shopifyVariantId: string;
+  variant_id: string; // Renamed from shopifyVariantId
   qty: number;
   unitCost: number;
   vendor?: string;
@@ -16,13 +16,13 @@ export interface PurchaseInput {
  * 3. Syncs to Shopify
  */
 export async function processNewPurchase(shopDomain: string, input: PurchaseInput) {
-  const { shopifyVariantId, qty, unitCost, vendor } = input;
+  const { variant_id, qty, unitCost, vendor } = input;
 
   // 1. Fetch current inventory state from DB
   const { data: currentInventory, error: fetchError } = await supabaseAdmin
     .from("inventory")
     .select("*")
-    .eq("shopify_variant_id", shopifyVariantId)
+    .eq("variant_id", variant_id)
     .single();
 
   if (fetchError && fetchError.code !== "PGRST116") {
@@ -35,8 +35,6 @@ export async function processNewPurchase(shopDomain: string, input: PurchaseInpu
 
   if (!currentInventory) {
     // New item to our system (though it exists in Shopify)
-    // We'll need to fetch current Shopify qty first in a real scenario,
-    // but for now we assume it's the first time we've tracked it.
     newQty = qty;
     newWac = unitCost;
 
@@ -44,11 +42,12 @@ export async function processNewPurchase(shopDomain: string, input: PurchaseInpu
     const { data: newItem, error: insertError } = await supabaseAdmin
       .from("inventory")
       .insert({
-        shopify_variant_id: shopifyVariantId,
-        name: "Pending Shopify Sync...", // Will be updated by webhook or sync job
-        current_qty: newQty,
-        wac_price: newWac,
-        manual_stock_flag: false,
+        variant_id: variant_id,
+        product_name: "Pending Shopify Sync...", 
+        stock: newQty,
+        cost: newWac,
+        category: "TCG",
+        brand: "Ukjent"
       })
       .select()
       .single();
@@ -57,8 +56,8 @@ export async function processNewPurchase(shopDomain: string, input: PurchaseInpu
     inventoryId = newItem.id;
   } else {
     // Calculate new WAC
-    const oldQty = currentInventory.current_qty;
-    const oldWac = Number(currentInventory.wac_price);
+    const oldQty = currentInventory.stock || 0;
+    const oldWac = Number(currentInventory.cost || 0);
     
     newQty = oldQty + qty;
     newWac = ((oldQty * oldWac) + (qty * unitCost)) / newQty;
@@ -68,10 +67,9 @@ export async function processNewPurchase(shopDomain: string, input: PurchaseInpu
     const { error: updateError } = await supabaseAdmin
       .from("inventory")
       .update({
-        current_qty: newQty,
-        wac_price: newWac,
-        manual_stock_flag: false,
-        last_synced_at: new Date().toISOString(),
+        stock: newQty,
+        cost: newWac,
+        last_sync: new Date().toISOString(),
       })
       .eq("id", inventoryId);
 
@@ -100,15 +98,15 @@ export async function processNewPurchase(shopDomain: string, input: PurchaseInpu
 
   // 3. Sync to Shopify
   // A. Update Cost
-  const costSync = await updateInventoryCost(shopDomain, shopifyVariantId, newWac);
+  const costSync = await updateInventoryCost(shopDomain, variant_id, newWac);
   
   // B. Update Inventory Level 
   let inventorySync = null;
   try {
     const locationId = await fetchPrimaryLocationId(shopDomain);
-    inventorySync = await updateInventoryLevel(shopDomain, shopifyVariantId, locationId, newQty);
+    inventorySync = await updateInventoryLevel(shopDomain, variant_id, locationId, newQty);
   } catch (err) {
-    logger.error({ shopifyVariantId, err }, "[WAC] Failed to sync inventory level");
+    logger.error({ variant_id, err }, "[WAC] Failed to sync inventory level");
   }
 
   return { inventoryId, newQty, newWac, costSync, inventorySync };

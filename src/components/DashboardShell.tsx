@@ -17,6 +17,8 @@ import {
   Search,
   ShieldCheck
 } from "lucide-react";
+import { useAppBridge } from "@shopify/app-bridge-react";
+import { getSessionToken } from "@shopify/app-bridge-utils";
 import { motion } from "framer-motion";
 import { i18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -34,6 +36,22 @@ const navigation = [
 ];
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+  const [isBridgeAvailable, setIsBridgeAvailable] = useState(false);
+  let app: any;
+  
+  try {
+    app = useAppBridge();
+  } catch (e) {
+    // Fail-safe for non-bridge contexts
+  }
+
+  // Handle Hydration safety
+  React.useEffect(() => {
+    setMounted(true);
+    if (app) setIsBridgeAvailable(true);
+  }, [app]);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const [isDemo, setIsDemo] = useState(true);
@@ -49,9 +67,16 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   // Dynamic Demo Check
   React.useEffect(() => {
+    if (!mounted || !app) return;
+    
     async function checkHealth() {
       try {
-        const res = await fetch('/api/health');
+        const token = await getSessionToken(app);
+        const res = await fetch('/api/health', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const json = await res.json();
         if (json.success && json.metrics.inventory_items > 0) {
           setIsDemo(false);
@@ -62,7 +87,7 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       }
     }
     checkHealth();
-  }, [pathname]);
+  }, [pathname, app, mounted]);
 
   // Unified safety status
   const safetyStatus = "blue" as "blue" | "red"; // Normalized for calibration
@@ -250,16 +275,56 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
       <StatusDrawer />
       <CommandCenter isOpen={isCommandCenterOpen} onClose={toggleCommandCenter} />
+      
+      {/* Diagnostic Overlay (Visible via ?debug=1 or after 10s of 'nothing') */}
+      <DiagnosticOverlay 
+        isVisible={pathname.includes('debug=1') || (typeof window !== 'undefined' && window.location.search.includes('debug=1'))} 
+        data={{
+          mounted,
+          isBridgeAvailable,
+          isDemo,
+          pathname,
+          apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ? "Present (****)" : "MISSING",
+          nodeEnv: process.env.NODE_ENV
+        }}
+      />
+    </div>
+  );
+}
+
+function DiagnosticOverlay({ isVisible, data }: { isVisible: boolean, data: any }) {
+  if (!isVisible) return null;
+  return (
+    <div className="fixed bottom-4 left-4 z-[9999] bg-[#1a1a1a]/95 backdrop-blur-xl text-white p-6 rounded-2xl border border-white/10 shadow-2xl font-mono text-[10px] space-y-4 min-w-[300px]">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <span className="font-black uppercase tracking-widest text-[#005bd3]">Sovereign Diagnostic</span>
+        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+      </div>
+      <div className="grid grid-cols-2 gap-y-2">
+        {Object.entries(data).map(([key, value]) => (
+          <React.Fragment key={key}>
+            <span className="text-white/50">{key}:</span>
+            <span className={cn(
+              "text-right",
+              value === true || value === "healthy" ? "text-emerald-400" : 
+              value === false || value === "MISSING" ? "text-red-400" : "text-white"
+            )}>
+              {String(value)}
+            </span>
+          </React.Fragment>
+        ))}
+      </div>
+      <div className="pt-2 border-t border-white/10 text-[8px] text-white/30 italic">
+        App Router Diagnostics • {new Date().toLocaleTimeString()}
+      </div>
     </div>
   );
 }
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
-    <UIProvider>
-      <ToastProvider>
-        <DashboardContent>{children}</DashboardContent>
-      </ToastProvider>
-    </UIProvider>
+    <ToastProvider>
+      <DashboardContent>{children}</DashboardContent>
+    </ToastProvider>
   );
 }

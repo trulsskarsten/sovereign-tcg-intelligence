@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { clientLogger } from '@/lib/client-logger';
+
 export default function OperationsHub() {
   const [health, setHealth] = useState<any>(null);
   const [diagnostics, setDiagnostics] = useState<any>(null);
@@ -33,7 +35,7 @@ export default function OperationsHub() {
       if (hJson.success) setHealth(hJson);
       if (dJson.success) setDiagnostics(dJson.diagnostics);
     } catch (err) {
-      console.error("Failed to fetch ops data", err);
+      clientLogger.error("Failed to fetch ops data", err);
     } finally {
       setLoading(false);
     }

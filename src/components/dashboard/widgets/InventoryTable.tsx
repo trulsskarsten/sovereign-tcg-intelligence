@@ -176,7 +176,7 @@ export function InventoryTable() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          shopify_variant_id: variantId,
+          variant_id: variantId,
           qty,
           unit_cost: cost
         })

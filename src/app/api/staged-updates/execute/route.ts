@@ -49,13 +49,15 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain, store_id })
           if (shopifyResult.dryRun) {
             results.dryRun++;
           } else {
-            // Log to price_history
+            // Log to price_history using fields from migrate-audit.sql
             await supabaseAdmin.from('price_history').insert({
-              store_id,
               variant_id: update.product_id,
-              old_price: currentPrice,
-              new_price: newPrice,
-              change_reason: update.reason || 'Staged execution'
+              old_price_net: currentPrice,
+              new_price_net: newPrice,
+              old_price_gross: currentPrice * 1.25, // Fallback calculation
+              new_price_gross: newPrice * 1.25,
+              source: 'staged_execution',
+              reason: update.reason || 'Staged execution'
             });
             results.success++;
           }

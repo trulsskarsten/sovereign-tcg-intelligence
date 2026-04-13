@@ -1,11 +1,19 @@
 import { isDryRun, generateIdempotencyKey, validatePriceChange } from "./safety";
 import { logger } from "./logger";
 import { createClient } from '@supabase/supabase-js';
+import { decrypt } from "./auth/encrypt";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  // We log but don't throw at top level to avoid crashing the server on import
+  if (process.env.NODE_ENV === 'production') {
+    console.warn("[Shopify Init] Missing Supabase credentials. Background sync and database operations will fail.");
+  }
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 let cachedToken: string | null = null;
 let tokenExpiry: number | null = null;
@@ -30,7 +38,13 @@ export async function getShopifyAccessToken(shopDomain: string) {
     .single();
 
   if (store?.access_token) {
-    return store.access_token;
+    try {
+      // Tokens are stored encrypted in the DB
+      return decrypt(store.access_token);
+    } catch (e) {
+      logger.error({ shopDomain, error: e }, "Failed to decrypt access token, assuming plaintext legacy");
+      return store.access_token;
+    }
   }
 
   // 2. If not, perform OAuth Client Credentials Handshake (from the user's Client ID/Secret)
@@ -250,6 +264,7 @@ export async function syncStoreVariants(shopDomain: string) {
         .from('inventory')
         .upsert({
           store_id: store?.id,
+          shop_domain: shopDomain,
           variant_id: variant.id,
           product_name: `${variant.product.title} - ${variant.title}`,
           sku: variant.sku || `NOSKU-${variant.id.split('/').pop()}`,

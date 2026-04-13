@@ -16,7 +16,20 @@ import { cn } from "@/lib/utils";
  * Now authenticated via Shopify App Bridge session tokens.
  */
 export function AutoActivator() {
-  const app = useAppBridge();
+  const [isBridgeAvailable, setIsBridgeAvailable] = useState(false);
+  let app: any;
+  
+  try {
+    app = useAppBridge();
+  } catch (e) {
+    // Fail-safe for non-bridge contexts
+  }
+
+  // Effect to verify bridge readiness
+  useEffect(() => {
+    if (app) setIsBridgeAvailable(true);
+  }, [app]);
+
   const { toast } = useToast();
   const pathname = usePathname();
   const activated = useRef(false);
@@ -24,6 +37,9 @@ export function AutoActivator() {
   const [isActivating, setIsActivating] = useState(false);
 
   const getAuthenticatedFetch = async (url: string, options: RequestInit = {}) => {
+    if (!app) {
+      throw new Error("App Bridge not initialized");
+    }
     const token = await getSessionToken(app);
     return fetch(url, {
       ...options,
@@ -35,7 +51,7 @@ export function AutoActivator() {
   };
 
   const triggerActivation = async () => {
-    if (isActivating) return;
+    if (isActivating || !app) return;
     setIsActivating(true);
     activated.current = true;
     
@@ -67,7 +83,14 @@ export function AutoActivator() {
 
   useEffect(() => {
     async function checkActivation() {
-      if (activated.current || isActivating || !app) return;
+      if (activated.current || isActivating || !app) {
+        // If app bridge is missing after 2 seconds on the main dashboard, show manual trigger
+        if (!app && pathname === "/") {
+           const timer = setTimeout(() => setShowManualTrigger(true), 2000);
+           return () => clearTimeout(timer);
+        }
+        return;
+      }
 
       try {
         const healthRes = await getAuthenticatedFetch("/api/health");
@@ -94,7 +117,7 @@ export function AutoActivator() {
     checkActivation();
   }, [pathname, app]);
 
-  if (!showManualTrigger) return null;
+  if (!showManualTrigger || !app) return null;
 
   return (
     <div className="fixed bottom-8 right-8 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-500">
