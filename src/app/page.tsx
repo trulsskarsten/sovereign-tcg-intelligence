@@ -1,17 +1,10 @@
+"use client";
+
 import React from "react";
 import DashboardShell from "@/components/DashboardShell";
 import { WidgetGrid } from "@/components/dashboard/WidgetGrid";
-import {
-  TrendingUp, 
-  Package, 
-  BarChart3, 
-  Zap,
-  Gem,
-  Plus,
-  DollarSign,
-  Loader2,
-  AlertTriangle
-} from "lucide-react";
+import { AutoActivator } from "@/components/dashboard/AutoActivator";
+import { TrendingUp } from "lucide-react";
 
 /**
  * Merchant Dashboard
@@ -21,6 +14,7 @@ import {
 export default function MerchantDashboard() {
   return (
     <DashboardShell>
+      <AutoActivator />
       <div className="max-w-[1600px] mx-auto py-10 px-6">
         <div className="mb-10 space-y-2">
           <h1 className="text-4xl font-black text-[#1a1a1a] tracking-tighter">

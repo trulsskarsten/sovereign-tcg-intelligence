@@ -36,7 +36,7 @@ const navigation = [
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const [isDemo] = useState(true);
+  const [isDemo, setIsDemo] = useState(true);
   const { 
     isStatusOpen, 
     toggleStatus, 
@@ -46,6 +46,23 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
     isCommandCenterOpen, 
     toggleCommandCenter 
   } = useUI();
+
+  // Dynamic Demo Check
+  React.useEffect(() => {
+    async function checkHealth() {
+      try {
+        const res = await fetch('/api/health');
+        const json = await res.json();
+        if (json.success && json.metrics.inventory_items > 0) {
+          setIsDemo(false);
+        }
+      } catch (err) {
+        // Fallback to demo mode if health check fails
+        setIsDemo(true);
+      }
+    }
+    checkHealth();
+  }, [pathname]);
 
   // Unified safety status
   const safetyStatus = "blue" as "blue" | "red"; // Normalized for calibration

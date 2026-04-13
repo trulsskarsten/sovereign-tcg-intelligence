@@ -36,7 +36,7 @@ export function KPICards() {
   const stats = [
     { 
       label: "Total Lagerverdi", 
-      value: loading ? "---" : formatCurrency(priceMode === "gross" ? data?.totalValueWithVat : data?.totalValueNok), 
+      value: loading ? "---" : formatCurrency(priceMode === "gross" ? (data?.totalValueWithVat ?? 0) : (data?.totalValueNok ?? 0)), 
       trend: "+2.1%", 
       icon: Gem, 
       color: "text-[#005bd3]", 
@@ -44,7 +44,7 @@ export function KPICards() {
     },
     { 
       label: "Urealisert Gevinst", 
-      value: loading ? "---" : formatCurrency(data?.potentialProfitNok || 0), 
+      value: loading ? "---" : formatCurrency(data?.potentialProfitNok ?? 0), 
       trend: "+5.4%", 
       icon: TrendingUp, 
       color: "text-[#108043]", 
@@ -52,7 +52,7 @@ export function KPICards() {
     },
     { 
       label: "Lagerbeholdning", 
-      value: loading ? "---" : `${data?.stockCount || 0} stk`, 
+      value: loading ? "---" : `${data?.stockCount ?? 0} stk`, 
       trend: "Stabil", 
       icon: Package, 
       color: "text-[#1a1a1a]", 
@@ -60,7 +60,7 @@ export function KPICards() {
     },
     { 
       label: "Margin-gjennomsnitt", 
-      value: loading ? "---" : `${data?.avgMarginPercentage?.toFixed(1) || 0}%`, 
+      value: loading ? "---" : `${(data?.avgMarginPercentage || 0).toFixed(1)}%`, 
       trend: "Stabil", 
       icon: BarChart3, 
       color: "text-[#005bd3]", 
