@@ -4,16 +4,15 @@ import React, { useState, useEffect } from 'react';
 import DashboardShell from '@/components/DashboardShell';
 import { useToast } from '@/components/ui/Toast';
 import { clientLogger } from '@/lib/client-logger';
-import { 
-  CheckCircle2, 
-  CreditCard, 
-  Crown, 
-  Star, 
+import {
+  CheckCircle2,
+  CreditCard,
+  Crown,
+  Star,
   ShieldCheck,
   Zap,
   ArrowRight,
-  Loader2,
-  ExternalLink
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BILLING_PLANS } from '@/lib/billing/shopify-billing';
@@ -37,9 +36,9 @@ export default function BillingSettings() {
             toast('Abonnement aktivert!', 'success');
           }
         })
-        .catch(err => clientLogger.error('Billing confirmation failed', err));
+        .catch(_err => clientLogger.error('Billing confirmation failed', _err));
     }
-  }, [searchParams]);
+  }, [searchParams, toast]);
 
   useEffect(() => {
     async function fetchStatus() {

@@ -17,9 +17,9 @@ export interface AutopilotResult {
 export function validateAutopilotChange(
   currentPrice: number,
   suggestedPrice: number,
-  cost: number,
+  _cost: number,
   abcClass: string,
-  vaultSettings: any
+  vaultSettings: Record<string, unknown>
 ): AutopilotResult {
   
   // 1. Safety Check: Classification

@@ -1,24 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Home, 
-  Package, 
-  ShoppingCart, 
-  TrendingUp, 
-  Receipt, 
-  Settings, 
-  Menu, 
+import {
+  Home,
+  Package,
+  TrendingUp,
+  Settings,
+  Menu,
   Bell,
   AlertTriangle,
   Zap,
   Search,
   ShieldCheck
 } from "lucide-react";
-import { useAppBridge } from "@shopify/app-bridge-react";
+import { AppBridgeContext } from "@shopify/app-bridge-react";
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import type { ClientApplication } from "@shopify/app-bridge/client";
 import { motion } from "framer-motion";
 import { i18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -37,32 +36,25 @@ const navigation = [
 
 function DashboardContent({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
-  const [isBridgeAvailable, setIsBridgeAvailable] = useState(false);
-  let app: any;
-  
-  try {
-    app = useAppBridge();
-  } catch (e) {
-    // Fail-safe for non-bridge contexts
-  }
+  // useContext never throws — returns null outside of <Provider>
+  const app: ClientApplication | null = useContext(AppBridgeContext);
 
-  // Handle Hydration safety
+  // Handle hydration safety — standard pattern, eslint-disable intentional
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
-    if (app) setIsBridgeAvailable(true);
-  }, [app]);
+  }, []);
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const [isDemo, setIsDemo] = useState(true);
-  const { 
-    isStatusOpen, 
-    toggleStatus, 
-    viewMode, 
+  const {
+    isStatusOpen,
+    toggleStatus,
     priceMode,
     togglePriceMode,
-    isCommandCenterOpen, 
-    toggleCommandCenter 
+    isCommandCenterOpen,
+    toggleCommandCenter
   } = useUI();
 
   // Dynamic Demo Check
@@ -277,11 +269,10 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       <CommandCenter isOpen={isCommandCenterOpen} onClose={toggleCommandCenter} />
       
       {/* Diagnostic Overlay (Visible via ?debug=1 or after 10s of 'nothing') */}
-      <DiagnosticOverlay 
-        isVisible={pathname.includes('debug=1') || (typeof window !== 'undefined' && window.location.search.includes('debug=1'))} 
+      <DiagnosticOverlay
+        isVisible={pathname.includes('debug=1') || (typeof window !== 'undefined' && window.location.search.includes('debug=1'))}
         data={{
           mounted,
-          isBridgeAvailable,
           isDemo,
           pathname,
           apiKey: process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ? "Present (****)" : "MISSING",
@@ -292,7 +283,15 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-function DiagnosticOverlay({ isVisible, data }: { isVisible: boolean, data: any }) {
+interface DiagnosticData {
+  mounted: boolean;
+  isDemo: boolean;
+  pathname: string;
+  apiKey: string;
+  nodeEnv: string | undefined;
+}
+
+function DiagnosticOverlay({ isVisible, data }: { isVisible: boolean; data: DiagnosticData }) {
   if (!isVisible) return null;
   return (
     <div className="fixed bottom-4 left-4 z-[9999] bg-[#1a1a1a]/95 backdrop-blur-xl text-white p-6 rounded-2xl border border-white/10 shadow-2xl font-mono text-[10px] space-y-4 min-w-[300px]">

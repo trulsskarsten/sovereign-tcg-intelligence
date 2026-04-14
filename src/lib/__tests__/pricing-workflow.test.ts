@@ -43,7 +43,7 @@ describe('Pricing Workflow Integration', () => {
     // Mock supabaseAdmin chain
     const insertMock = vi.fn().mockResolvedValue({ data: null, error: null });
     
-    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+    vi.mocked(supabaseAdmin.from).mockImplementation((table: string) => {
       const chain = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
@@ -89,4 +89,4 @@ describe('Pricing Workflow Integration', () => {
       status: 'pending'
     }));
   });
-});
+})

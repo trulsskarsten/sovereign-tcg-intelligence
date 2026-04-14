@@ -3,18 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DashboardShell from '@/components/DashboardShell';
 import { useToast } from '@/components/ui/Toast';
-import { 
-  ShieldAlert, 
-  TrendingUp, 
-  CheckCircle2, 
-  Clock, 
-  Gem, 
-  Package, 
+import {
+  CheckCircle2,
+  Clock,
+  Package,
   Star,
   Zap,
   Loader2,
-  XCircle,
-  MoreVertical
+  XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/i18n';
@@ -23,7 +19,7 @@ import { clientLogger } from '@/lib/client-logger';
 export default function StagingHub() {
   const { toast } = useToast();
   const [activeFilter, setActiveFilter] = useState('pending');
-  const [updates, setUpdates] = useState<any[]>([]);
+  const [updates, setUpdates] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
   const [isConfirmingExecute, setIsConfirmingExecute] = useState(false);
@@ -79,8 +75,8 @@ export default function StagingHub() {
         setUpdates(prev => prev.filter(u => !selectedIds.includes(u.id)));
         setSelectedIds([]);
       }
-    } catch (err) {
-      clientLogger.error(`Bulk ${action} failed`, err);
+    } catch (_err) {
+      clientLogger.error(`Bulk ${action} failed`, _err);
     } finally {
       setBulkProcessing(false);
     }
@@ -93,7 +89,7 @@ export default function StagingHub() {
         setUpdates(prev => prev.filter(u => u.id !== id));
         toast(action === 'approve' ? 'Oppdatering godkjent' : 'Oppdatering avvist', action === 'approve' ? 'success' : 'info');
       }
-    } catch (err) {
+    } catch (_err) {
       toast(`Handlingen feilet`, 'error');
     }
   };
@@ -114,7 +110,7 @@ export default function StagingHub() {
       } else {
         toast('Utførelse feilet', 'error');
       }
-    } catch (err) {
+    } catch (_err) {
       toast('Utførelse feilet', 'error');
     } finally {
       setExecuting(false);

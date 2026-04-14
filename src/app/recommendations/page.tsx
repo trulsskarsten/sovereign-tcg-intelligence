@@ -1,13 +1,10 @@
 "use client";
 
 import DashboardShell from "@/components/DashboardShell";
-import { 
-  TrendingUp, 
-  Check, 
-  X, 
-  AlertTriangle, 
+import {
+  Check,
+  X,
   Info,
-  ExternalLink,
   ArrowRight
 } from "lucide-react";
 

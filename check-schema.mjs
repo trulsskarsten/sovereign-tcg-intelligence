@@ -20,7 +20,7 @@ async function checkSchema() {
   
   for (const table of tables) {
     try {
-      const { data, error } = await supabase
+      const { _data, error } = await supabase
         .from(table)
         .select('count')
         .limit(1);

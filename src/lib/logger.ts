@@ -13,6 +13,6 @@ export const logger = pino({
 /**
  * Creates a child logger with request context.
  */
-export function createLogger(context: { store_id?: string; request_id?: string; [key: string]: any }) {
+export function createLogger(context: { store_id?: string; request_id?: string; [key: string]: unknown }) {
   return logger.child(context);
 }

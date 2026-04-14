@@ -1,4 +1,4 @@
-name: Skarsten TCG Sync
+name: Skarsten TCG Market Sync
 
 on:
   schedule:
@@ -9,7 +9,38 @@ jobs:
   sync_market_data:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Sync
+      - name: Validate secrets
         run: |
-          curl -X POST "${{ secrets.APP_URL }}/api/sync/market" \
-          -H "Authorization: Bearer ${{ secrets.SYNC_SECRET }}"
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "::error::APP_URL secret is not set. Add it in GitHub Settings → Secrets → Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "::error::CRON_SECRET secret is not set. Add it in GitHub Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Trigger market price scrape
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/response.txt -w "%{http_code}" \
+            -X POST "${{ secrets.APP_URL }}/api/cron/scrape" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/response.txt
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::error::Scrape endpoint returned $HTTP_STATUS"
+            exit 1
+          fi
+
+      - name: Trigger ABC classification sync
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/abc_response.txt -w "%{http_code}" \
+            -X POST "${{ secrets.APP_URL }}/api/cron/abc-sync" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "HTTP Status: $HTTP_STATUS"
+          cat /tmp/abc_response.txt
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "::warning::ABC sync returned $HTTP_STATUS (non-fatal)"
+          fi

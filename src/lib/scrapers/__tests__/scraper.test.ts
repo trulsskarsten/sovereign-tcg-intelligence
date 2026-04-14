@@ -13,7 +13,7 @@ describe("Scraper Adapters: Pokepris", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       text: () => Promise.resolve(html),
-    } as any);
+    } as unknown as Response);
 
     const results = await scrapePokepris("pikachu");
 

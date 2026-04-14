@@ -33,7 +33,7 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain }) => {
       }
     `;
     const checkRes = await shopifyQuery(shop_domain, checkQuery);
-    const existingTitles = new Set(checkRes.data?.products?.nodes.map((n: any) => n.title) || []);
+    const existingTitles = new Set(checkRes.data?.products?.nodes.map((n: Record<string, unknown>) => (n as { title: string }).title) || []);
 
     const createdResults = [];
 

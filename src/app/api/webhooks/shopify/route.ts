@@ -28,13 +28,14 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleProductUpdate(product: any) {
-  for (const variant of product.variants) {
+async function handleProductUpdate(product: Record<string, unknown>) {
+  const productTyped = product as { title: string; variants: Array<{ id: string | number; sku: string; price: string; title: string }> };
+  for (const variant of productTyped.variants) {
     const { error } = await supabaseAdmin
       .from("inventory")
       .upsert({
         variant_id: `gid://shopify/ProductVariant/${variant.id}`,
-        product_name: `${product.title} - ${variant.title}`,
+        product_name: `${productTyped.title} - ${variant.title}`,
         sku: variant.sku,
         price: parseFloat(variant.price),
         last_sync: new Date().toISOString(),
@@ -46,14 +47,15 @@ async function handleProductUpdate(product: any) {
   }
 }
 
-async function handleInventoryUpdate(inventory: any) {
+async function handleInventoryUpdate(inventory: Record<string, unknown>) {
+  const inventoryTyped = inventory as { available: number; inventory_item_id: string | number };
   const { error } = await supabaseAdmin
     .from("inventory")
     .update({
-      stock: inventory.available,
+      stock: inventoryTyped.available,
       last_sync: new Date().toISOString(),
     })
-    .eq("variant_id", `gid://shopify/ProductVariant/${inventory.inventory_item_id}`); 
+    .eq("variant_id", `gid://shopify/ProductVariant/${inventoryTyped.inventory_item_id}`); 
 
   if (error) throw error;
 }

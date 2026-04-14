@@ -3,11 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, 
-  Package, 
-  ShoppingCart, 
-  TrendingUp, 
-  Settings, 
+  Search,
+  Package,
+  TrendingUp,
+  Settings,
   Zap,
   ArrowRight,
   Command as CommandIcon
@@ -51,7 +50,10 @@ export default function CommandCenter({ isOpen, onClose }: { isOpen: boolean; on
 
   useEffect(() => {
     if (isOpen) {
+      // Resetting dialog state when it opens is intentional.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery("");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
@@ -155,7 +157,7 @@ export default function CommandCenter({ isOpen, onClose }: { isOpen: boolean; on
                 </div>
               ) : (
                 <div className="py-12 text-center">
-                  <p className="text-sm text-[#6d7175]">Ingen treff for "{query}"</p>
+                  <p className="text-sm text-[#6d7175]">Ingen treff for &ldquo;{query}&rdquo;</p>
                 </div>
               )}
             </div>

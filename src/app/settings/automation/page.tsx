@@ -17,7 +17,12 @@ import { clientLogger } from '@/lib/client-logger';
 
 export default function AutomationSettings() {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<any>({
+  interface AutomationSettings {
+    is_automation_enabled: boolean;
+    floor_margin: number;
+    panic_lock_threshold: number;
+  }
+  const [settings, setSettings] = useState<AutomationSettings>({
     is_automation_enabled: false,
     floor_margin: 10,
     panic_lock_threshold: 20

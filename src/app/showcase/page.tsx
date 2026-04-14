@@ -69,7 +69,7 @@ export default function PublicShowcase() {
                   <p className="text-[11px] font-bold text-[#6d7175] uppercase tracking-widest mb-2">Lagerverdi Beskyttet</p>
                   <h3 className="text-4xl font-black tracking-tight">4.2M kr</h3>
                   <p className="text-xs text-[#6d7175] mt-4 leading-relaxed">
-                    Overvåkes 24/7 av "Panic Lock" og autonome sikkerhets-rails.
+                    Overvåkes 24/7 av &ldquo;Panic Lock&rdquo; og autonome sikkerhets-rails.
                   </p>
                </div>
                <BarChart3 size={120} className="absolute right-[-2rem] bottom-[-2rem] text-[#1a1a1a]/5 -rotate-12 group-hover:rotate-0 transition-transform duration-700" />

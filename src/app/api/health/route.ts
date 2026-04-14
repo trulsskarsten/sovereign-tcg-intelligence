@@ -31,12 +31,12 @@ export const GET = withAuth(async (req: NextRequest, { shop_domain, store_id }) 
       .select('*', { count: 'exact', head: true })
       .eq('store_id', store_id);
 
-    const { count: stagedCount, error: stagedError } = await supabaseAdmin
+    const { count: stagedCount, error: _stagedError } = await supabaseAdmin
       .from('staged_updates')
       .select('*', { count: 'exact', head: true })
       .eq('store_id', store_id)
       .eq('status', 'pending');
-    
+
     return NextResponse.json({
       success: true,
       status: (shopifyStatus === "healthy" && !invError) ? "healthy" : "degraded",

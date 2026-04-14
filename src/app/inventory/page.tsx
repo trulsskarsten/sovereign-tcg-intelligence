@@ -23,10 +23,10 @@ import { useToast } from "@/components/ui/Toast";
 export default function Inventory() {
   const { priceMode } = useUI();
   const { toast } = useToast();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, total_pages: 0 });
@@ -42,7 +42,7 @@ export default function Inventory() {
       } else {
         setError(json?.error || "Ukjent feil ved henting av lager");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("Kunne ikke hente varebeholdning");
     } finally {
       setLoading(false);
@@ -65,7 +65,7 @@ export default function Inventory() {
       } else {
         toast('Synkronisering feilet', 'error');
       }
-    } catch (err) {
+    } catch (_err) {
       toast('Synkronisering feilet', 'error');
     } finally {
       setIsSyncing(false);

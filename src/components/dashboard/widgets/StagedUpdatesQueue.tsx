@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ListChecks, AlertCircle, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { ListChecks, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
 
 export function StagedUpdatesQueue() {
   const { toast } = useToast();
-  const [updates, setUpdates] = useState<any[]>([]);
+  const [updates, setUpdates] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
   const [isConfirmingExecute, setIsConfirmingExecute] = useState(false);

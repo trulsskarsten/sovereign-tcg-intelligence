@@ -4,8 +4,8 @@
  * Run this script to verify system integrity before production launch.
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 const CHECKLIST = [
   { id: 'RLS', name: 'Row Level Security Policies', target: 'scripts/production-hardening.sql' },

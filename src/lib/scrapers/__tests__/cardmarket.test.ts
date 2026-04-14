@@ -32,7 +32,7 @@ describe("CardmarketClient", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockResponse)
-    } as any);
+    } as unknown as Response);
 
     const priceGuide = await client.getPriceGuide("Pikachu");
 
@@ -40,9 +40,9 @@ describe("CardmarketClient", () => {
     expect(priceGuide?.idProduct).toBe(12345);
     expect(priceGuide?.avgSellPrice).toBe(56.78);
     expect(priceGuide?.lowPrice).toBe(45.00);
-    
+
     // Verify fetch was called with Authorization header
-    const fetchCall = (global.fetch as any).mock.calls[0];
+    const fetchCall = vi.mocked(global.fetch).mock.calls[0];
     expect(fetchCall[1].headers.Authorization).toContain("OAuth");
     expect(fetchCall[1].headers.Authorization).toContain('oauth_consumer_key="test_token"');
   });
@@ -51,7 +51,7 @@ describe("CardmarketClient", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ product: [] })
-    } as any);
+    } as unknown as Response);
 
     const priceGuide = await client.getPriceGuide("NonExistentItem");
     expect(priceGuide).toBeNull();

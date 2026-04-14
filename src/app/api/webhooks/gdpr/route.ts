@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Ugyldig signatur", { status: 401 });
   }
 
-  const payload = JSON.parse(rawBody);
+  const _payload = JSON.parse(rawBody);
 
   log.info(`GDPR Webhook received`);
 

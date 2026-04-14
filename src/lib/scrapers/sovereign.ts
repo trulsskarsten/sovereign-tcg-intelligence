@@ -30,16 +30,16 @@ export interface ScrapeResult {
  * Main scraping engine.
  */
 export async function scrapeRetailer(url: string, query: string = ""): Promise<ScrapeResult[]> {
-  const ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-  
+  const _ua = USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+
   // 1. Add Randomized Jitter (Human Delay)
   const delay = Math.floor(Math.random() * 3000) + 2000; // 2-5 seconds
   await new Promise(r => setTimeout(r, delay));
 
   logger.info({ url, query }, "[Sovereign Scraper] Launching stealth crawl");
-  
+
   try {
-    let results: any[] = [];
+    let results: Array<Record<string, unknown>> = [];
     
     if (url.includes("pokepris.no")) {
       results = await scrapePokepris(query);

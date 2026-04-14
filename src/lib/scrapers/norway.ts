@@ -1,4 +1,4 @@
-import { scrapePokepris, scrapePokevarsler, scrapeOutland, ScrapedProduct } from "./adapters";
+import { scrapePokepris, scrapePokevarsler, scrapeOutland } from "./adapters";
 import { logger } from "../logger";
 
 export interface ScraperResult {

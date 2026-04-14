@@ -24,14 +24,20 @@ export const GET = withAuth(async (req: NextRequest, { shop_domain, store_id }) 
       if (historyError) throw historyError;
 
       // Group by date for the chart
-      const chartData = history.reduce((acc: any[], curr: any) => {
-        const date = new Date(curr.created_at).toLocaleDateString('no-NO', { day: '2-digit', month: '2-digit' });
+      interface ChartDataPoint {
+        name: string;
+        value: number;
+        volume: number;
+      }
+      const chartData = history.reduce((acc: ChartDataPoint[], curr: Record<string, unknown>) => {
+        const currTyped = curr as { created_at: string; new_price: number };
+        const date = new Date(currTyped.created_at).toLocaleDateString('no-NO', { day: '2-digit', month: '2-digit' });
         const existing = acc.find(a => a.name === date);
         if (existing) {
-          existing.value = curr.new_price;
+          existing.value = currTyped.new_price;
           existing.volume += 1;
         } else {
-          acc.push({ name: date, value: curr.new_price, volume: 1 });
+          acc.push({ name: date, value: currTyped.new_price, volume: 1 });
         }
         return acc;
       }, []);

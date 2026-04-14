@@ -16,10 +16,16 @@ import { Activity, Loader2, Info } from 'lucide-react';
 import { clientLogger } from '@/lib/client-logger';
 import { cn } from '@/lib/utils';
 
+interface TrendDataPoint {
+  date: string;
+  value: number;
+  [key: string]: string | number;
+}
+
 export function PerformanceChart() {
   const [view, setView] = useState<'trend' | 'roi'>('trend');
-  const [data, setData] = useState<any[]>([]);
-  const [roiData, setRoiData] = useState<any[]>([]);
+  const [data, setData] = useState<TrendDataPoint[]>([]);
+  const [roiData, setRoiData] = useState<TrendDataPoint[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -154,7 +160,7 @@ export function PerformanceChart() {
               />
               <YAxis hide domain={[0, 'auto']} />
               <Tooltip 
-                formatter={(val: any) => [`${parseFloat(val).toFixed(1)}%`, 'ROI']}
+                formatter={(val: number | string) => [`${parseFloat(String(val)).toFixed(1)}%`, 'ROI']}
                 contentStyle={{ 
                   borderRadius: '16px', border: 'none', 
                   boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
@@ -176,11 +182,11 @@ export function PerformanceChart() {
       <div className="flex items-center space-x-2 p-3 bg-blue-50/50 rounded-2xl border border-blue-100">
          <Info size={14} className="text-[#005bd3] shrink-0" />
          <p className="text-[9px] text-[#6d7175] font-medium leading-tight">
-            {view === 'trend' 
+            {view === 'trend'
               ? "Denne grafen viser gjennomsnittsprisen på dine lagerførte varer over tid."
               : "Viser avkastning (fortjeneste / kostnad) per lagerklasse basert på innkjøpspris."}
          </p>
-      </div>
+            </div>
     </div>
   );
 }

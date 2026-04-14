@@ -98,7 +98,7 @@ export default function AssistantSettings() {
                   <h2 className="text-sm font-black text-[#1a1a1a] uppercase tracking-tighter">Morgen-Oppsummering</h2>
                 </div>
                 <p className="text-[11px] text-[#6d7175] font-medium leading-relaxed">
-                  Motta en profesjonell "Briefing" hver morgen med oversikt over nattens markedshendelser, margin-blokkeringer og anbefalte handlinger.
+                  Motta en profesjonell &ldquo;Briefing&rdquo; hver morgen med oversikt over nattens markedshendelser, margin-blokkeringer og anbefalte handlinger.
                 </p>
                 <div className="flex items-center justify-between p-4 bg-[#f8f9fa] rounded-2xl border border-[#f1f2f3]">
                   <div className="flex items-center space-x-3">

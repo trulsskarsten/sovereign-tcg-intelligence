@@ -43,7 +43,7 @@ export default function SetupPage() {
               <p>Opprett en Custom App i Shopify for å gi dette dashbordet tilgang:</p>
               <ol className="list-decimal list-inside space-y-2 ml-4">
                 <li>Gå til <strong>Innstillinger &gt; Apper og salgskanaler &gt; Utvikle apper</strong>.</li>
-                <li>Klikk <strong>Opprett en app</strong> og kall den "TCG Ops".</li>
+                <li>Klikk <strong>Opprett en app</strong> og kall den &ldquo;TCG Ops&rdquo;.</li>
                 <li>Under <strong>Konfigurasjon</strong>, gi <code>write_products</code> og <code>write_inventory</code> rettigheter.</li>
                 <li>Kopier din <strong>Admin API access token</strong> (starter med <code>shpat_</code>).</li>
               </ol>
@@ -74,7 +74,7 @@ export default function SetupPage() {
                   {copied === "sql" ? <CheckCircle2 className="h-4 w-4 text-[#008060]" /> : <Copy className="h-4 w-4" />}
                 </button>
                 <div className="space-y-1">
-                  <p className="text-gray-500">// Kjør denne kommandoen for å se SQL-skriptet:</p>
+                  <p className="text-gray-500">{'// Kjør denne kommandoen for å se SQL-skriptet:'}</p>
                   <p className="text-[#202223]">node scripts/init-db.mjs</p>
                 </div>
               </div>

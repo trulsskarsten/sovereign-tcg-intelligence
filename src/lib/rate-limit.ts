@@ -40,7 +40,7 @@ export async function applyRateLimit(req: NextRequest): Promise<NextResponse | n
     ? authHeader.split(".")[1] // JWT middle segment as proxy for shop
     : (forwarded?.split(",")[0].trim() ?? "unknown");
 
-  const { success, limit, remaining } = await limiter.limit(identifier);
+  const { success } = await limiter.limit(identifier);
 
   if (!success) {
     return NextResponse.json(

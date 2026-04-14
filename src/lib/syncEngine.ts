@@ -66,7 +66,7 @@ export async function syncStoreInventory(shopDomain: string) {
       query: filterQuery
     });
 
-    const products = response.products.edges.map((edge: any) => edge.node);
+    const products = response.products.edges.map((edge: Record<string, unknown>) => (edge as { node: Record<string, unknown> }).node);
 
     // 3. Process & Identify (Smart Matcher)
     for (const prod of products) {

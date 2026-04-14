@@ -4,7 +4,6 @@ import React from "react";
 import DashboardShell from "@/components/DashboardShell";
 import { WidgetGrid } from "@/components/dashboard/WidgetGrid";
 import { AutoActivator } from "@/components/dashboard/AutoActivator";
-import { TrendingUp } from "lucide-react";
 
 /**
  * Merchant Dashboard

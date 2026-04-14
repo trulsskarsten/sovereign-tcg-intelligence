@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    let { sessionToken, shop } = body;
+    const { sessionToken, shop: rawShop } = body;
+    let shop = rawShop;
 
     // If shop is missing, extract it from the session token (JWT payload 'dest')
     if (!shop && sessionToken) {
@@ -81,8 +82,9 @@ export async function POST(req: NextRequest) {
           requested_token_type: 'urn:shopify:params:oauth:token-type:offline-access-token',
         }),
       });
-    } catch (fetchErr: any) {
-      throw new Error(`Klarte ikke å kontakte Shopify (${shop}): ${fetchErr.message}`);
+    } catch (fetchErr: unknown) {
+      const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      throw new Error(`Klarte ikke å kontakte Shopify (${shop}): ${msg}`);
     }
 
     const responseText = await shopifyResponse.text();
@@ -130,13 +132,13 @@ export async function POST(req: NextRequest) {
       store_id: store.id 
     });
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     // UNMASK ERROR: Ensure we see the real message even if it's not a standard Error instance
-    const message = err?.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
-    
-    logger.error({ err, shop: (req as any)._shop }, "Token exchange route error");
+    const message = err instanceof Error ? err.message : (typeof err === 'object' ? JSON.stringify(err) : String(err));
+
+    logger.error({ err }, "Token exchange route error");
     console.error("[SERVER-DEBUG] Token exchange fatal error:", message);
-    
+
     return NextResponse.json({ 
       error: message === '{}' ? "Ukjent serverfeil (tomt feilobjekt)" : message 
     }, { status: 500 });

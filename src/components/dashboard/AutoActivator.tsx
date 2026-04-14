@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useAppBridge } from "@shopify/app-bridge-react";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { AppBridgeContext } from "@shopify/app-bridge-react";
 import { getSessionToken } from "@shopify/app-bridge-utils";
+import type { ClientApplication } from "@shopify/app-bridge/client";
 import { usePathname } from "next/navigation";
 import { clientLogger } from "@/lib/client-logger";
 import { useToast } from "@/components/ui/Toast";
@@ -11,24 +12,17 @@ import { cn } from "@/lib/utils";
 
 /**
  * AutoActivator
- * Invisible component that checks for empty stores and triggers initial 
+ * Invisible component that checks for empty stores and triggers initial
  * seeding/synchronization to ensure a great first-load experience.
- * Now authenticated via Shopify App Bridge session tokens.
+ * Authenticated via Shopify App Bridge session tokens.
+ * Uses useContext(AppBridgeContext) directly (returns null when no Provider)
+ * instead of useAppBridge() which throws — keeping hooks unconditional.
  */
 export function AutoActivator() {
-  const [isBridgeAvailable, setIsBridgeAvailable] = useState(false);
-  let app: any;
-  
-  try {
-    app = useAppBridge();
-  } catch (e) {
-    // Fail-safe for non-bridge contexts
-  }
+  // useContext never throws — returns null when no Provider is present.
+  // This satisfies rules-of-hooks while gracefully handling non-bridge contexts.
+  const app: ClientApplication | null = useContext(AppBridgeContext);
 
-  // Effect to verify bridge readiness
-  useEffect(() => {
-    if (app) setIsBridgeAvailable(true);
-  }, [app]);
 
   const { toast } = useToast();
   const pathname = usePathname();

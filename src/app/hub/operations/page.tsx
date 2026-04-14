@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import DashboardShell from '@/components/DashboardShell';
-import { 
-  Activity, 
-  Database, 
-  Globe, 
-  ShieldCheck, 
-  Terminal, 
+import {
+  Activity,
+  Database,
+  Globe,
+  Terminal,
   AlertCircle,
   CheckCircle2,
   RefreshCw,
@@ -17,9 +16,18 @@ import { cn } from '@/lib/utils';
 
 import { clientLogger } from '@/lib/client-logger';
 
+interface HealthData {
+  services?: { shopify?: string; database?: string };
+  metrics?: { shopify_latency_ms?: number; inventory_items?: number; pending_updates?: number };
+}
+
+interface DiagnosticsData {
+  recent_activity?: Array<{ id: string; severity: string; action: string; created_at: string; entity_type: string }>;
+}
+
 export default function OperationsHub() {
-  const [health, setHealth] = useState<any>(null);
-  const [diagnostics, setDiagnostics] = useState<any>(null);
+  const [health, setHealth] = useState<HealthData | null>(null);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -153,7 +161,7 @@ export default function OperationsHub() {
                     <p className="text-[10px] text-[#6d7175] font-black uppercase tracking-widest">Henter logger...</p>
                  </div>
                ) : diagnostics?.recent_activity?.length > 0 ? (
-                 diagnostics.recent_activity.map((log: any) => (
+                 diagnostics.recent_activity.map((log: { id: string; severity: string; action: string; created_at: string; entity_type: string }) => (
                     <div key={log.id} className="p-6 flex items-center justify-between group hover:bg-[#f9fafb] transition-colors">
                        <div className="flex items-center space-x-6">
                           <div className={cn(

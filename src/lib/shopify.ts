@@ -15,8 +15,8 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-let cachedToken: string | null = null;
-let tokenExpiry: number | null = null;
+const cachedToken: string | null = null;
+const tokenExpiry: number | null = null;
 
 /**
  * Ensures a valid Admin API Access Token is available.
@@ -209,7 +209,7 @@ export async function syncStoreVariants(shopDomain: string) {
 
   if (!store) throw new Error(`Butikk ${shopDomain} ikke funnet.`);
 
-  const variantLimit = (store.beta_flags as any)?.max_variants || 5000;
+  const variantLimit = (store.beta_flags as Record<string, unknown>)?.max_variants as number || 5000;
   
   // Using productVariants connection for direct variant access
   const query = `
@@ -321,7 +321,7 @@ export async function fetchPrimaryLocationId(shopDomain: string): Promise<string
 
   const result = await shopifyQuery(shopDomain, query);
   const locations = result.locations?.nodes || [];
-  const primary = locations.find((l: any) => l.isPrimary) || locations[0];
+  const primary = locations.find((l: { isPrimary: boolean }) => l.isPrimary) || locations[0];
 
   if (!primary) {
     throw new Error("No locations found for shop");
@@ -329,4 +329,3 @@ export async function fetchPrimaryLocationId(shopDomain: string): Promise<string
 
   return primary.id;
 }
-

@@ -13,9 +13,16 @@ import { formatCurrency } from "@/lib/i18n";
 import { useUI } from "@/components/Providers";
 import { clientLogger } from "@/lib/client-logger";
 
+interface KPIData {
+  totalValueWithVat?: number;
+  totalValueNok?: number;
+  potentialProfitNok?: number;
+  [key: string]: unknown;
+}
+
 export function KPICards() {
   const { priceMode } = useUI();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

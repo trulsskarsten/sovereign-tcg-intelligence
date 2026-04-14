@@ -41,7 +41,7 @@ describe('Inventory Sync Engine', () => {
   it('should sync variants using cursor pagination', async () => {
     // 1st call: Sync Variants Page 1
     // 2nd call: Sync Variants Page 2
-    (global.fetch as any)
+    vi.mocked(global.fetch)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -94,7 +94,7 @@ describe('Inventory Sync Engine', () => {
   });
 
   it('should handle API errors gracefully', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ data: { productVariants: null } })
     });

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Responsive, WidthProvider } from "react-grid-layout/legacy";
+import { Responsive, WidthProvider, type Layouts, type Layout } from "react-grid-layout/legacy";
 import { useUI } from "@/components/Providers";
 import { defaultLayout, WIDGET_TITLES } from "@/lib/dashboard/default-layout";
 import { KPICards } from "./widgets/KPICards";
@@ -12,7 +12,8 @@ import { PerformanceChart } from "./widgets/PerformanceChart";
 import { GripVertical, Loader2, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { clientLogger } from "@/lib/client-logger";
-const ResponsiveGridLayout = (WidthProvider as any)(Responsive) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ResponsiveGridLayout = (WidthProvider as (component: typeof Responsive) => React.ComponentType<Record<string, unknown>>)(Responsive);
 
 const WIDGET_COMPONENTS: Record<string, React.ReactNode> = {
   kpis: <KPICards />,
@@ -24,7 +25,7 @@ const WIDGET_COMPONENTS: Record<string, React.ReactNode> = {
 
 export function WidgetGrid() {
   const { isEditMode, toggleEditMode } = useUI();
-  const [layouts, setLayouts] = useState<any>(defaultLayout);
+  const [layouts, setLayouts] = useState<Layouts>(defaultLayout as Layouts);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -45,7 +46,7 @@ export function WidgetGrid() {
     loadLayout();
   }, []);
 
-  const onLayoutChange = (currentLayout: any, allLayouts: any) => {
+  const onLayoutChange = (_currentLayout: Layout[], allLayouts: Layouts) => {
     if (isEditMode) {
       setLayouts(allLayouts);
     }

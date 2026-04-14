@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Package, Search, ExternalLink, Loader2 } from "lucide-react";
+import { Package, Search, Loader2 } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/i18n";
@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/Toast";
 
 export function InventoryTable() {
   const { toast } = useToast();
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activePurchaseItem, setActivePurchaseItem] = useState<string | null>(null);

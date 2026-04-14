@@ -2,16 +2,10 @@
 
 import React, { useState } from "react";
 import DashboardShell from "@/components/DashboardShell";
-import { 
-  Plus, 
-  History, 
-  Calendar, 
-  Package, 
-  ArrowRight,
-  TrendingUp,
-  Search,
-  Filter,
-  FileText
+import {
+  Plus,
+  Package,
+  Search
 } from "lucide-react";
 import { i18n, formatCurrency, formatPercent } from "@/lib/i18n";
 import { useUI } from "@/components/Providers";
@@ -19,7 +13,6 @@ import { formatPrice } from "@/lib/pricing";
 
 export default function PurchasesPage() {
   const { priceMode } = useUI();
-  const [isAddingInnkjøp, setIsAddingInnkjøp] = useState(false);
   
   const investedAmount = 42500;
 
@@ -31,8 +24,7 @@ export default function PurchasesPage() {
             <h1 className="text-2xl font-bold text-[#202223] tracking-tight">{i18n.common.purchases} & WAC</h1>
             <p className="text-sm text-[#6d7175] mt-1">Registrer nye varer og oppdater automatisk gjennomsnittlig innkjøpspris (WAC).</p>
           </div>
-          <button 
-            onClick={() => setIsAddingInnkjøp(true)}
+          <button
             className="polaris-btn-primary flex items-center"
           >
             <Plus size={16} className="mr-2" /> Nytt Innkjøp

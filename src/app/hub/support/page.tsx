@@ -2,13 +2,11 @@
 
 import React from 'react';
 import DashboardShell from '@/components/DashboardShell';
-import { 
-  HelpCircle, 
-  BookOpen, 
-  ShieldCheck, 
-  MessageSquare,
+import {
+  HelpCircle,
+  BookOpen,
+  ShieldCheck,
   ChevronRight,
-  Info,
   Clock
 } from 'lucide-react';
 import FeedbackWidget from '@/components/support/FeedbackWidget';

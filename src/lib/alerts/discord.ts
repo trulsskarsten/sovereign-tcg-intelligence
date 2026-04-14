@@ -37,7 +37,7 @@ const AVATARS = {
  * High severity messages are sent to the dedicated Security channel.
  */
 export async function sendDiscordAlert(
-  payload: { title: string; message: string; severity: AlertSeverity; fields?: any[] }
+  payload: { title: string; message: string; severity: AlertSeverity; fields?: Array<Record<string, unknown>> }
 ) {
   const isCritical = ['error', 'critical'].includes(payload.severity);
   

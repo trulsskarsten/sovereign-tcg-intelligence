@@ -2,21 +2,19 @@
 
 import React, { useState } from 'react';
 import DashboardShell from '@/components/DashboardShell';
-import { 
-  Package, 
-  Search, 
-  DollarSign, 
-  ShoppingBag, 
-  ChevronRight, 
-  CheckCircle2,
-  AlertCircle
+import {
+  Package,
+  Search,
+  DollarSign,
+  ChevronRight,
+  CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function AddSealedProduct() {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   // Mock search results for sealed products
   const searchResults = [

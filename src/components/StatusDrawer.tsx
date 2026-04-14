@@ -55,7 +55,7 @@ export default function StatusDrawer() {
                   <h3 className="text-[11px] font-bold text-[#6d7175] uppercase tracking-widest mb-3">Morgen-oppsummering</h3>
                   <div className="bg-[#f6f6f7] border border-[#d2d5d9] rounded-lg p-4">
                     <p className="text-xs text-[#202223] leading-relaxed italic">
-                      "God morgen! Jeg har sett på markedet for deg. Porteføljen din har steget med 1.2% mens du sov, og det er 2 nye prisbølger å se på."
+                      &ldquo;God morgen! Jeg har sett på markedet for deg. Porteføljen din har steget med 1.2% mens du sov, og det er 2 nye prisbølger å se på.&rdquo;
                     </p>
                   </div>
                 </section>

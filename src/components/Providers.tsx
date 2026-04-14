@@ -19,22 +19,25 @@ interface UIState {
 
 const UIContext = createContext<UIState | undefined>(undefined);
 
-export function UIProvider({ children }: { children: React.ReactNode }) {
-  const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("standard");
-  const [priceMode, setPriceMode] = useState<"net" | "gross">("net");
-  const [isEditMode, setIsEditMode] = useState(false);
+// Safe localStorage reader — returns null during SSR
+function readStorage(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(key);
+}
 
-  // Persistence
-  useEffect(() => {
-    const savedStatus = localStorage.getItem("ui-status-open");
-    const savedView = localStorage.getItem("ui-view-mode");
-    const savedPrice = localStorage.getItem("ui-price-mode");
-    if (savedStatus) setIsStatusOpen(savedStatus === "true");
-    if (savedView) setViewMode(savedView as ViewMode);
-    if (savedPrice) setPriceMode(savedPrice as "net" | "gross");
-  }, []);
+export function UIProvider({ children }: { children: React.ReactNode }) {
+  // Lazy initialisers read localStorage once on mount (no effect needed)
+  const [isStatusOpen, setIsStatusOpen] = useState<boolean>(
+    () => readStorage("ui-status-open") === "true"
+  );
+  const [isCommandCenterOpen, setIsCommandCenterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => (readStorage("ui-view-mode") as ViewMode) ?? "standard"
+  );
+  const [priceMode, setPriceMode] = useState<"net" | "gross">(
+    () => (readStorage("ui-price-mode") as "net" | "gross") ?? "net"
+  );
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("ui-status-open", String(isStatusOpen));

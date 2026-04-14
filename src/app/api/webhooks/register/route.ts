@@ -18,7 +18,7 @@ const WEBHOOK_TOPICS = [
  * Programmatically registers required Shopify webhooks for a store.
  * Called after successful install/auth.
  */
-export const POST = withAuth(async (req: NextRequest, { shop_domain, store_id }) => {
+export const POST = withAuth(async (req: NextRequest, { shop_domain }) => {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) {
     logger.error({ shop_domain }, "NEXT_PUBLIC_APP_URL not configured — cannot register webhooks");
@@ -49,7 +49,7 @@ export const POST = withAuth(async (req: NextRequest, { shop_domain, store_id })
       if (userErrors && userErrors.length > 0) {
         // Ignore "already registered" errors
         const nonDupeErrors = userErrors.filter(
-          (e: any) => !e.message.toLowerCase().includes("already")
+          (e: Record<string, unknown>) => !(e as { message: string }).message.toLowerCase().includes("already")
         );
         if (nonDupeErrors.length > 0) {
           results.push({ topic: webhook.topic, success: false, error: nonDupeErrors[0].message });

@@ -6,7 +6,15 @@ import { clientLogger } from "@/lib/client-logger";
 import { cn } from "@/lib/utils";
 
 export function RecommendationsWidget() {
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  interface Recommendation {
+    id: string;
+    type: string;
+    product_name?: string;
+    suggested_price?: number;
+    current_price?: number;
+    [key: string]: unknown;
+  }
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatPrice, calculateROI, getMVAAmount, MVA_RATE } from './pricing';
+import { formatPrice, calculateROI, getMVAAmount } from './pricing';
 
 describe('Pricing & VAT Engine', () => {
   it('should format price correctly in gross and net mode', () => {

@@ -12,15 +12,15 @@ export interface ScrapedProduct {
  * Scraper for Pokepris.no
  */
 export async function scrapePokepris(query: string): Promise<ScrapedProduct[]> {
-  const url = `https://www.pokepris.no/?q=${encodeURIComponent(query)}`;
-  
+  const baseUrl = `https://www.pokepris.no/?q=${encodeURIComponent(query)}`;
+
   try {
-    const response = await fetch(url);
+    const response = await fetch(baseUrl);
     const html = await response.text();
     const $ = cheerio.load(html);
-    
+
     const results: ScrapedProduct[] = [];
-    
+
     // Select product cards based on reconnaissance (div.group is the wrapper)
     $("div.group").each((_, el) => {
       const name = $(el).find("h3").text().trim();
@@ -29,17 +29,17 @@ export async function scrapePokepris(query: string): Promise<ScrapedProduct[]> {
         const text = $(span).text();
         return text.includes("kr") || text.includes(",-");
       }).first().text().trim();
-      
+
       const urlSuffix = $(el).find("a").attr("href");
-      const url = urlSuffix ? (urlSuffix.startsWith("http") ? urlSuffix : `https://www.pokepris.no${urlSuffix}`) : "";
+      const productUrl = urlSuffix ? (urlSuffix.startsWith("http") ? urlSuffix : `https://www.pokepris.no${urlSuffix}`) : "";
       
       const stockText = $(el).text();
-      
+
       if (name && priceText) {
         // Handle Norwegian price format: 339.00 kr or 339.00,-
         const price = parseFloat(priceText.replace(/[^\d,.]/g, "").replace(",", "."));
         const stockStatus = stockText.includes("Utsolgt") ? "OUT_OF_STOCK" : "IN_STOCK";
-        
+
         results.push({
           name,
           price,

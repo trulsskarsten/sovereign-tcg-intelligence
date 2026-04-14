@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePriceChange, TCG_SAFETY_TIERS } from '../tiers';
+import { validatePriceChange } from '../tiers';
 
 describe('TCG Safety Matrix & Tiered Repricing', () => {
   it('should allow small price changes in the low tier', () => {

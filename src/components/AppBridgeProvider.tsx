@@ -31,8 +31,9 @@ function TokenExchangeHandler({
         let sessionToken;
         try {
           sessionToken = await getSessionToken(app);
-        } catch (tokenErr: any) {
-          throw new Error(`[TRACE: TOKEN] Kunne ikke hente session-token fra Shopify: ${tokenErr.message}`);
+        } catch (tokenErr: unknown) {
+          const msg = tokenErr instanceof Error ? tokenErr.message : String(tokenErr);
+          throw new Error(`[TRACE: TOKEN] Kunne ikke hente session-token fra Shopify: ${msg}`);
         }
 
         const shop = searchParams.get('shop');
@@ -49,8 +50,9 @@ function TokenExchangeHandler({
             },
             body: JSON.stringify({ sessionToken, shop: shop || undefined }),
           });
-        } catch (fetchErr: any) {
-          throw new Error(`[TRACE: FETCH] Nettverksfeil mot ${fetchUrl}: ${fetchErr.message}`);
+        } catch (fetchErr: unknown) {
+          const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+          throw new Error(`[TRACE: FETCH] Nettverksfeil mot ${fetchUrl}: ${msg}`);
         }
 
         // [STEP 3] Read Response Body
@@ -69,10 +71,10 @@ function TokenExchangeHandler({
         }
 
         onComplete();
-      } catch (error: any) {
+      } catch (error: unknown) {
         clientLogger.error('Auth Error', error);
-        // Ensure the full trace message is passed to the UI
-        onError(error.message || 'Ukjent feil i autentiseringskjeden');
+        const msg = error instanceof Error ? error.message : 'Ukjent feil i autentiseringskjeden';
+        onError(msg);
       }
     }
 
@@ -91,21 +93,19 @@ function AppBridgeContent({ children }: { children: ReactNode }) {
   const [appConfig, setAppConfig] = useState<{ apiKey: string; host: string } | null>(null);
   const [status, setStatus] = useState<'loading' | 'authorized' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isMissingApiKey, setIsMissingApiKey] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+
+  // NEXT_PUBLIC_ vars are baked in at build time — derive without effect
+  const isMissingApiKey = !process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
 
   useEffect(() => {
     const host = searchParams.get('host');
     const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY;
 
-    if (!apiKey) {
-      setIsMissingApiKey(true);
-      return;
-    }
+    if (!apiKey || !host) return;
 
-    if (host && apiKey) {
-      setAppConfig({ apiKey, host });
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAppConfig({ apiKey, host });
   }, [searchParams]);
 
   // Handle missing configuration gracefully
@@ -208,6 +208,9 @@ export default function AppBridgeProvider({ children }: { children: ReactNode })
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Intentional hydration guard — setState in empty-dep effect is the correct
+    // pattern for client-only rendering. eslint-disable is deliberate.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
